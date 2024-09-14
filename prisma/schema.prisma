@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRoles {
+  DEFAULT
+  ADMIN
+  MODERATOR
+  PRO
+  VIP
+  PLUS
+}
+
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  surname        String?
+  username       String?   @unique
+  email          String   @unique
+  tel            String?
+  gender         String?
+  role           UserRoles @default(DEFAULT)
+  emailVerified  DateTime?
+  image          String?
+  coverImage     String?
+  hashedPassword String?
+  bio            String?
+  dob            DateTime?
+  country        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  //Links
+  links String[]
+
+  // Relationships
+  account               Account[]
+  friendRequest         FriendRequest[] @relation("FriendRequestsSent")
+  friendRequestReceived FriendRequest[] @relation("FriendRequestsReceived")
+  gameBodys             GameBody[]
+  // Follower/Following Relations
+  followers             Follower[]      @relation("followers")
+  followings            Follower[]      @relation("followings")
+  UserGames             UserGame[]      @relation("UserGames")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Follower {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  followerId  String @db.ObjectId
+  followingId String @db.ObjectId
+
+  follower  User @relation("followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("followings", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@index([followerId, followingId], map: "unique_follow")
+}
+
+model FriendRequest {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  requesterId String        @db.ObjectId
+  recipientId String        @db.ObjectId
+  gameId      String        @db.ObjectId
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  requester User @relation("FriendRequestsSent", fields: [requesterId], references: [id])
+  recipient User @relation("FriendRequestsReceived", fields: [recipientId], references: [id])
+
+  @@index([requesterId, recipientId], name: "unique_request")
+}
+
+model GameBody {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  title       String
+  description String
+  gameId      String       @db.ObjectId
+  image       String?
+  type        GameBodyType @default(GAMEMATE)
+  searchType  SearchType   @default(LOOKING_FOR) // Eklenen alan
+  createdAt   DateTime     @default(now())
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game? @relation("GameFriendRequests", fields: [gameId], references: [id])
+}
+
+enum GameBodyType {
+  TEAMMATE
+  GAMEMATE
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum SearchType {
+  LOOKING_FOR    // Oyun arkadaşı arıyor
+  WANT_TO_JOIN   // Mevcut bir oyuna katılmak istiyor
+}
+
+model Game {
+  id       String     @id @default(auto()) @map("_id") @db.ObjectId
+  name     String    @unique
+  genre    String[]
+  platform String // Platform type (PC, Console, etc.)
+  image    String?
+  players  UserGame[] @relation("GameUsers")
+  gameBody GameBody[] @relation("GameFriendRequests")
+}
+
+model UserGame {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  gameId String @db.ObjectId
+
+  user User @relation("UserGames", fields: [userId], references: [id], onDelete: Cascade)
+  game Game @relation("GameUsers", fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([userId, gameId], map: "unique_usergame")
+}
