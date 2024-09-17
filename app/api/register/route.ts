@@ -12,6 +12,14 @@ export async function POST(request: Request) {
             return new NextResponse('Missing info', {status: 400});
         }
 
+        const existingEmail = await prisma.user.findUnique({
+            where: { email }
+        })
+
+        if(existingEmail) {
+            return new NextResponse('Email kullanılıyor', {status: 400});
+        }
+        
         const existingUsername = await prisma.user.findFirst({
             where: {
                 username: username

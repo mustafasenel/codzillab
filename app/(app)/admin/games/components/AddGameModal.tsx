@@ -68,6 +68,8 @@ import { Separator } from "@/components/ui/separator";
 import { Game } from "@prisma/client";
 import { SingleImageDropzone } from "@/components/SıngleImageDropzone";
 import { useEdgeStore } from "@/lib/edgestore";
+import { genres } from "@/utils/genres";
+import { platforms } from "@/utils/platforms";
 
 const gameFormSchema = z.object({
   name: z.string().max(160).min(2),
@@ -77,33 +79,8 @@ const gameFormSchema = z.object({
   id: z.string().optional()
 });
 
-const genres = [
-  { value: "FPS", label: "FPS" },
-  { value: "MOBA", label: "MOBA" },
-  { value: "Simulasyon", label: "Simulasyon" },
-  { value: "MMORPG", label: "MMORPG" },
-  { value: "MMO", label: "MMO" },
-  { value: "Macera", label: "Macera" },
-  { value: "Aksiyon", label: "Aksiyon" },
-  { value: "Korku", label: "Korku" },
-  { value: "Açık Dünya", label: "Açık Dünya" },
-  { value: "Rol Yapma", label: "Rol Yapma" },
-  { value: "Battle Royale", label: "Battle Royale" },
-  { value: "Yarış", label: "Yarış" },
-  { value: "Strateji", label: "Strateji" },
-  { value: "Mobil", label: "Mobil" },
-  { value: "Spor", label: "Spor" },
-  { value: "Hayatta Kalma", label: "Hayatta Kalma" },
-] as const;
 
-const platforms = [
-  { value: "pc", label: "PC" },
-  { value: "mobile", label: "Mobil" },
-  { value: "nintendo", label: "Nintendo" },
-  { value: "xbox", label: "XBOX" },
-  { value: "ps4", label: "PS4" },
-  { value: "ps5", label: "PS5" },
-] as const;
+
 type gameFormValues = z.infer<typeof gameFormSchema>;
 
 interface AddGameModalProps {

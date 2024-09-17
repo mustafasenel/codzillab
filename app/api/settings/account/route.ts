@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
     const body = await request.json();
-    const { day, month, year, country } = body;
+    const { day, month, year, country, gender, education, educationOnStudy, work } = body;
 
     const dob = new Date(
       `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
@@ -22,7 +22,11 @@ export async function POST(request: Request) {
         },
         data : {
           dob,
-          country
+          country,
+          gender,
+          education,
+          educationOnStudy,
+          work
         }
     })
 

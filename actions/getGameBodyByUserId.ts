@@ -23,6 +23,8 @@ const getGameBodyByUserId = async (
                     user: true
                 }
             })
+        } else {
+            return []
         }
 
         return userGameBodyAdvert as FullGameBodyType[]

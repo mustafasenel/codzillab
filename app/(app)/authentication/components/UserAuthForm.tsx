@@ -19,17 +19,16 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const session = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isCreateAccount, setIsCreateAccount] = React.useState<boolean>(false);
   const [usernameAvailable, setUsernameAvailable] =
     React.useState<boolean>(true);
 
-
-  const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
-  ? "Email başka bir hesapta kullanılıyor!"
-  : ""
-  
+  const urlError =
+    searchParams.get("error") === "OAuthAccountNotLinked"
+      ? "Email başka bir hesapta kullanılıyor!"
+      : "";
 
   const {
     register,
@@ -99,9 +98,13 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         .post("/api/register", data)
         .then(() => {
           signIn("credentials", data);
-          router.push("/app");
         })
-        .catch(() => toast.error("Sometihing went wrong!"))
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data || "Bir hata oluştu. Lütfen tekrar deneyin.";
+          toast.error(errorMessage);
+          console.error("Password update error:", error);
+        })
         .finally(() => setIsLoading(false));
     }
     if (!isCreateAccount) {
@@ -115,9 +118,10 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           }
           if (callback?.ok && !callback?.error) {
             toast.success("Successfully logged in!");
-            router.push("/timeline");
+            router.push("/app");
           }
         })
+
         .finally(() => setIsLoading(false));
     }
   };
@@ -243,15 +247,13 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
               )}
             </div>
           )}
-          {
-            urlError && (
-              <Card className="bg-red-200">
-                  <CardContent>
-                    <p className="text-red-700">{urlError}</p>
-                  </CardContent>
-              </Card>
-            )
-          }
+          {urlError && (
+            <Card className="bg-red-200">
+              <CardContent>
+                <p className="text-red-700">{urlError}</p>
+              </CardContent>
+            </Card>
+          )}
           <Button type="submit" disabled={isLoading}>
             {isLoading && (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
@@ -275,12 +277,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           disabled={isLoading}
           onClick={() => socialAction("google")}
         >
-          {isLoading ? (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Icons.google className="mr-2 h-4 w-4" />
-          )}{" "}
-          Google
+          <Icons.google className="mr-2 h-4 w-4" /> Google
         </Button>
         <Button
           variant="outline"
@@ -288,12 +285,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           disabled={isLoading}
           onClick={() => socialAction("discord")}
         >
-          {isLoading ? (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Icons.discord className="mr-2 h-4 w-4s" />
-          )}{" "}
-          Discord
+          <Icons.discord className="mr-2 h-4 w-4s" /> Discord
         </Button>
       </div>
       <Button

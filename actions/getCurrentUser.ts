@@ -17,7 +17,26 @@ const getCurrentUser = async ():Promise<FullUserType|null> => {
             include:{
                 account: true,
                 followers: true,
-                followings: true
+                followings: true,
+                friendRequestReceived: {
+                    include: {
+                        recipient:true,
+                        requester: true
+                    }
+                },
+                friendRequestSent: {
+                    include: {
+                        recipient:true,
+                        requester: true
+                    }
+                },
+                UserGames: {
+                    include: {
+                        game: true,
+                        user: true
+                    }
+                }
+                
             }
         })
 

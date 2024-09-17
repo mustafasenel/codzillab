@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { UserAuthForm } from "./components/UserAuthForm";
+import { blurhashToBase64 } from "blurhash-base64"; 
 
 const AuthPage = async () => {
   return (
@@ -16,17 +17,24 @@ const AuthPage = async () => {
           <Button>Ana Sayfa</Button>
         </Link>
         <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
-          <div className="absolute top-48 inset-0 bg-contain bg-no-repeat" style={{
-            backgroundImage: `url("/register-bg.jpg")`
-
-          }}/>
+              <Image
+                src={"/register-bg.jpg"}
+                alt="logo"
+                width={60}
+                height={50}
+                unoptimized
+                placeholder="blur"
+                blurDataURL={blurhashToBase64("UNFFyr-4VXtm%~Z~VXpJpdngnMtl_Ns7VrXA")}
+                className="absolute top-0 left-0 w-full h-full object-contain bg-no-repeat"
+              />
           <div className="relative z-20 flex items-center gap-4 text-lg font-medium">
             <a href="/" className="mr-4 flex items-center lg:mr-6">
               <Image
-                src={"/symbol.png"}
+                src={"/codzillab-logo.png"}
                 alt="logo"
-                width={100}
+                width={60}
                 height={50}
+                unoptimized
               />
             </a>
           </div>

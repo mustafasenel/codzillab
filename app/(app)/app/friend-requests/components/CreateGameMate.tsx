@@ -130,6 +130,7 @@ export function CreateGameMate({
   };
 
   const handleDeleteFile = async (file: string) => {
+    setIsSubmitting(true);
     if (file) {
       await edgestore.publicFiles.delete({
         url: file,
@@ -137,6 +138,7 @@ export function CreateGameMate({
       setValue("image", "");
       setFile(undefined);
       setImageFile("")
+      setIsSubmitting(false);
     }
   }
 

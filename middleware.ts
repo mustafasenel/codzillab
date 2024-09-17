@@ -13,7 +13,10 @@ export default withAuth(
     const { pathname } = nextUrl;
     const isLoggedIn = !!req.nextauth?.token; // Token olup olmadığını kontrol et
 
-    // Authentication sayfasının erişimine izin ver
+    if(pathname === "/") {
+      return NextResponse.next()
+    }
+    // Giriş yapılmamış kullanıcıların /authentication sayfasına erişimine izin ver
     if (pathname.startsWith("/authentication")) {
       if (!isLoggedIn) {
         return NextResponse.next(); // Giriş yapılmamış kullanıcıların erişimine izin ver
@@ -26,37 +29,34 @@ export default withAuth(
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
 
-    if (
-      pathname.startsWith("/admin") &&
-      req.nextauth?.token?.role === "ADMIN"
-    ) {
-      return NextResponse.next();
-    } else if (
-      pathname.startsWith("/admin") &&
-      req.nextauth?.token?.role !== "ADMIN"
-    ) {
-      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    // Giriş yapmış kullanıcılar için /admin sayfalarına erişim kontrolü
+    if (pathname.startsWith("/admin")) {
+      if (req.nextauth?.token?.role === "ADMIN") {
+        return NextResponse.next();
+      } else {
+        return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      }
     }
 
     // Diğer korunan sayfalar için yönlendirme
-    const isProtectedRoute = authRoutes.includes(pathname); 
- 
-    if (isProtectedRoute && isLoggedIn) { 
-      return NextResponse.redirect(new URL(CUSTOM_SIGN_IN_URL, nextUrl)); // Redirect to custom sign-in page 
-    } 
+    const isProtectedRoute = authRoutes.includes(pathname);
+    
+    if (isProtectedRoute && !isLoggedIn) {
+      return NextResponse.redirect(new URL(CUSTOM_SIGN_IN_URL, nextUrl)); // Yönlendirme
+    }
 
-    // Diğer sayfalar için devam et 
-    return NextResponse.next(); 
-  }, 
+    // Diğer sayfalar için devam et
+    return NextResponse.next();
+  },
   {
     callbacks: {
       authorized: ({ token, req }) => {
         const { pathname } = req.nextUrl;
 
-        // Giriş yapılmamış kullanıcıların /authentication sayfasına erişimine izin ver 
-        if (pathname.startsWith("/authentication") && !token) { 
-          return true; 
-        } 
+        // Giriş yapılmamış kullanıcıların /authentication sayfasına erişimine izin ver
+        if (pathname.startsWith("/authentication") && !token) {
+          return true;
+        }
 
         return !!token;
       },
@@ -64,6 +64,6 @@ export default withAuth(
   }
 );
 
-export const config = { 
-  matcher: ["/app/:path*", "/admin/:path*", "/authentication/:path*", "/"], 
+export const config = {
+  matcher: ["/app/:path*", "/admin/:path*", "/authentication/:path*"],
 };

@@ -1,0 +1,18 @@
+export const genres = [
+    { value: "FPS", label: "FPS" },
+    { value: "MOBA", label: "MOBA" },
+    { value: "Simulasyon", label: "Simulasyon" },
+    { value: "MMORPG", label: "MMORPG" },
+    { value: "MMO", label: "MMO" },
+    { value: "Macera", label: "Macera" },
+    { value: "Aksiyon", label: "Aksiyon" },
+    { value: "Korku", label: "Korku" },
+    { value: "Açık Dünya", label: "Açık Dünya" },
+    { value: "Rol Yapma", label: "Rol Yapma" },
+    { value: "Battle Royale", label: "Battle Royale" },
+    { value: "Yarış", label: "Yarış" },
+    { value: "Strateji", label: "Strateji" },
+    { value: "Mobil", label: "Mobil" },
+    { value: "Spor", label: "Spor" },
+    { value: "Hayatta Kalma", label: "Hayatta Kalma" },
+  ] as const;

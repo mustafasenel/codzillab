@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "./components/sidebar-nav";
 import Navbar from "@/components/Navbar";
 import getCurrentUser from "@/actions/getCurrentUser";
-import { KeyRound, SquareUserRound, User } from "lucide-react";
+import { CoinsIcon, Gamepad, Gamepad2Icon, KeyRound, SquareUserRound, User } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Codzillab | Ayarlar",
@@ -29,12 +29,14 @@ const sidebarNavItems = [
     icon: <KeyRound size={20}/>
   },
   {
-    title: "Görünüm",
-    href: "/settings/appearance",
+    title: "Favori Oyunlar",
+    href: "/settings/favorite-games",
+    icon: <Gamepad2Icon size={20}/>
   },
   {
-    title: "Bildirim",
+    title: "Seviye ve Puanlar",
     href: "/settings/notifications",
+    icon: <CoinsIcon size={20}/>
   },
   {
     title: "Display",

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { FullGameBodyType } from "@/types";
 import {
   format,
+  formatDistanceToNow,
   formatDistanceToNowStrict,
   isWithinInterval,
   subWeeks,
@@ -30,8 +31,8 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
       end: new Date(),
     });
 
-    let relativeTime = formatDistanceToNowStrict(advert.createdAt, {
-      addSuffix: false,
+    let relativeTime = formatDistanceToNow(advert.createdAt, {
+      addSuffix: true,
       locale: tr, // Türkçe lokalizasyon kullanımı
     });
     relativeTime = relativeTime
@@ -60,7 +61,9 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
             quality={100}
             fill
           />
-          <Badge className="absolute top-1 left-1 px-1">{advert.game.name}</Badge>
+          <Badge className="absolute top-1 left-1 px-1">
+            {advert.game.name}
+          </Badge>
           <div className="absolute bottom-1 left-1 flex flex-wrap gap-1">
             {advert.game.genre.slice(0, 2).map((genre, index) => (
               <Badge key={index} variant="secondary">
@@ -139,10 +142,14 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-5 w-5" />
-              <span className="text-xs font-light">Ankara</span>
-            </div>
+            {advert.user.country && (
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <MapPin className="h-5 w-5" />
+                <span className="text-xs font-light">
+                  {advert.user.country}
+                </span>
+              </div>
+            )}
           </div>
         </Link>
       </div>

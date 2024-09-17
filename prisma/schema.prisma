@@ -23,30 +23,37 @@ enum UserRoles {
 }
 
 model User {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  name           String?
-  surname        String?
-  username       String?   @unique
-  email          String   @unique
-  tel            String?
-  gender         String?
-  role           UserRoles @default(DEFAULT)
-  emailVerified  DateTime?
-  image          String?
-  coverImage     String?
-  hashedPassword String?
-  bio            String?
-  dob            DateTime?
-  country        String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  name             String?
+  surname          String?
+  username         String?   @unique
+  email            String    @unique
+  tel              String?
+  gender           String?
+  role             UserRoles @default(DEFAULT)
+  emailVerified    DateTime?
+  image            String?
+  coverImage       String?
+  hashedPassword   String?
+  bio              String?
+  dob              DateTime?
+  country          String?
+  education        String?
+  educationOnStudy Boolean?
+  work             String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   //Links
   links String[]
 
+  //Favorites
+  genres    String[]
+  platforms String[]
+
   // Relationships
   account               Account[]
-  friendRequest         FriendRequest[] @relation("FriendRequestsSent")
+  friendRequestSent     FriendRequest[] @relation("FriendRequestsSent")
   friendRequestReceived FriendRequest[] @relation("FriendRequestsReceived")
   gameBodys             GameBody[]
   // Follower/Following Relations
@@ -90,7 +97,6 @@ model FriendRequest {
   id          String        @id @default(auto()) @map("_id") @db.ObjectId
   requesterId String        @db.ObjectId
   recipientId String        @db.ObjectId
-  gameId      String        @db.ObjectId
   status      RequestStatus @default(PENDING)
   createdAt   DateTime      @default(now())
 
@@ -127,13 +133,13 @@ enum RequestStatus {
 }
 
 enum SearchType {
-  LOOKING_FOR    // Oyun arkadaşı arıyor
-  WANT_TO_JOIN   // Mevcut bir oyuna katılmak istiyor
+  LOOKING_FOR // Oyun arkadaşı arıyor
+  WANT_TO_JOIN // Mevcut bir oyuna katılmak istiyor
 }
 
 model Game {
   id       String     @id @default(auto()) @map("_id") @db.ObjectId
-  name     String    @unique
+  name     String     @unique
   genre    String[]
   platform String // Platform type (PC, Console, etc.)
   image    String?

@@ -30,6 +30,8 @@ import { useRouter } from "next/navigation";
 import { Icons } from "@/components/icons";
 import { FullUserType } from "@/types";
 import { months } from "@/utils/months";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Zod schema for the form
 const accountFormSchema = z.object({
@@ -37,6 +39,10 @@ const accountFormSchema = z.object({
   month: z.string().min(1, "Ay alanı doldurulması zorunlu"),
   year: z.string().min(1, "Yıl alanı doldurulması zorunlu"),
   country: z.string().min(1, "Şehir alanı doldurulması zorunlu"),
+  gender: z.string().min(1, "Cinsiyet alanı doldurulması zorunlu"),
+  education: z.string().optional(),
+  educationOnStudy: z.boolean().optional(),
+  work: z.string().optional(),
 });
 
 // Types for form values
@@ -45,20 +51,24 @@ type AccountFormValues = z.infer<typeof accountFormSchema>;
 // Default values for the form
 
 interface AccountFormProps {
-  user: FullUserType
+  user: FullUserType;
 }
 
-export function AccountForm({ user } : AccountFormProps) {
+export function AccountForm({ user }: AccountFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const defaultValues: Partial<AccountFormValues> = {
-    day: user.dob && user?.dob?.getDate().toString() || "1",
-    month: user.dob && (user.dob.getMonth() + 1).toString() || "Ocak",
-    year: user.dob && user.dob.getFullYear().toString() || "2024",
-    country: user?.country || ""
+    day: (user.dob && user?.dob?.getDate().toString()) || "1",
+    month: (user.dob && (user.dob.getMonth() + 1).toString()) || "Ocak",
+    year: (user.dob && user.dob.getFullYear().toString()) || "2024",
+    country: user?.country || "",
+    gender: user?.gender || "",
+    education: user?.education || "",
+    educationOnStudy: user?.educationOnStudy || false,
+    work: user?.work || "",
   };
-  
+
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues,
@@ -202,37 +212,158 @@ export function AccountForm({ user } : AccountFormProps) {
             )}
           />
         </div>
+        <div className="sm:flex gap-4">
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Şehir</FormLabel>
+                <Controller
+                  name="country"
+                  control={form.control}
+                  disabled={isLoading}
+                  render={({ field: { onChange, value } }) => (
+                    <Select
+                      onValueChange={(value) => onChange(value)}
+                      value={value}
+                    >
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Şehir" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {countries.map((country) => (
+                            <SelectItem
+                              value={country.toString()}
+                              key={country}
+                            >
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FormDescription>Yaşadığınız şehri seçiniz</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Cinsiyet</FormLabel>
+                <Controller
+                  name="gender"
+                  control={form.control}
+                  disabled={isLoading}
+                  render={({ field: { onChange, value } }) => (
+                    <Select
+                      onValueChange={(value) => onChange(value)}
+                      value={value}
+                    >
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Cinsiyet" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value={"Erkek"}>Erkek</SelectItem>
+                          <SelectItem value={"Kadın"}>Kadın</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FormDescription>Cinsiyetinizi seçiniz</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <FormField
+            control={form.control}
+            name="education"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Eğitim</FormLabel>
+                <Controller
+                  name="education"
+                  control={form.control}
+                  disabled={isLoading}
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      {...field}
+                      placeholder="Okuduğunuz veya bitirdiğiniz okulu giriniz"
+                      disabled={isLoading}
+                    />
+                  )}
+                />
+                <FormDescription>
+                  En son okuduğunuz veya halen devam etmekte olduğunuz okulu
+                  giriniz
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="educationOnStudy"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <Controller
+                  name="educationOnStudy"
+                  control={form.control}
+                  disabled={isLoading}
+                  render={({ field: { onChange, value, ref, onBlur } }) => (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="terms"
+                        checked={value}
+                        onCheckedChange={onChange}
+                        ref={ref}
+                        onBlur={onBlur}
+                      />
+                      <label
+                        htmlFor="terms"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Halen devam ediyorum
+                      </label>
+                    </div>
+                  )}
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
-          name="day"
+          name="work"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Şehir</FormLabel>
+              <FormLabel>İş Yeri</FormLabel>
               <Controller
-                name="country"
+                name="work"
                 control={form.control}
                 disabled={isLoading}
                 render={({ field: { onChange, value } }) => (
-                  <Select
-                    onValueChange={(value) => onChange(value)}
-                    value={value}
-                  >
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="Şehir" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {countries.map((country) => (
-                          <SelectItem value={country.toString()} key={country}>
-                            {country}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    {...field}
+                    placeholder="Çalıştığınız yeri giriniz"
+                    disabled={isLoading}
+                  />
                 )}
               />
-              <FormDescription>Yaşadığınız şehri seçiniz</FormDescription>
+              <FormDescription>
+                Çalıştığınız bir yer var ise bilgisini giriniz.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

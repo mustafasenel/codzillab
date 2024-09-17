@@ -249,7 +249,7 @@ export function ProfileForm({ user }: ProfileFormTypes) {
               </FormControl>
               <FormDescription>
                 Doğrulanmış e-posta adreslerinizi e-posta ayarlarından
-                yönetebilirsiniz.
+                yönetebilirsiniz. Eğer farklı bir sosyal medya hesabı ile bağlıysanız değiştiremezsiniz.
               </FormDescription>
               <FormMessage />
             </FormItem>
