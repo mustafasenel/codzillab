@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import PlaceholderContent from "@/components/demo/placeholder-content";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -10,10 +9,14 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import getCurrentUser from "@/actions/getCurrentUser";
 
-export default function UsersPage() {
+export default async function UsersPage() {
+  
+  const currentUser = await getCurrentUser()
+  
   return (
-    <ContentLayout title="Users">
+    <ContentLayout title="Users" currentUser={currentUser!}>
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -33,7 +36,7 @@ export default function UsersPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+
     </ContentLayout>
   );
 }
