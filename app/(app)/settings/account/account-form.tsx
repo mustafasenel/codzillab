@@ -60,8 +60,8 @@ export function AccountForm({ user }: AccountFormProps) {
 
   const defaultValues: Partial<AccountFormValues> = {
     day: (user.dob && user?.dob?.getDate().toString()) || "1",
-    month: (user.dob && (user.dob.getMonth() + 1).toString()) || "Ocak",
-    year: (user.dob && user.dob.getFullYear().toString()) || "2024",
+    month: (user.dob && (user?.dob?.getMonth() + 1).toString()) || "Ocak",
+    year: (user.dob && user?.dob?.getFullYear().toString()) || "2024",
     country: user?.country || "",
     gender: user?.gender || "",
     education: user?.education || "",
