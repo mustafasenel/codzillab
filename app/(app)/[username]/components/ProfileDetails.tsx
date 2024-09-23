@@ -70,17 +70,28 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   const handleFollow = () => {
     setIsLoading(true);
     try {
-      axios
-        .post("/api/user/follow", {
-          recipientId: user?.id,
-        })
-        .then(() => {
-          isRequestSent
-            ? toast.success("Arkadaşlık isteği geri çekildi")
-            : toast.success("Arkadaşlık isteği gönderildi");
-          router.refresh();
-        })
-        .finally(() => setIsLoading(false));
+      if (!isFollowing) {
+        
+        axios
+          .post("/api/user/follow", {
+            recipientId: user?.id,
+          })
+          .then(() => {
+            isRequestSent
+              ? toast.success("Arkadaşlık isteği geri çekildi")
+              : toast.success("Arkadaşlık isteği gönderildi");
+            router.refresh();
+          })
+          .finally(() => setIsLoading(false));
+      } else {
+        axios
+          .post("/api/user/follow/unfollow", {
+            recipientId: user?.id,
+          })
+          .then(() => {router.refresh();
+          })
+          .finally(() => setIsLoading(false));
+      }
     } catch (error: any) {
       console.error(error);
     }
@@ -157,7 +168,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
           >
             {isLoading ? (
               <Icons.spinner className="md:h-5 md:w-5 h-4 w-4 animate-spin" />
-            ) : isRequestSent ? (
+            ) : isRequestSent || isFollowing ? (
               <UserCheck className="md:h-5 md:w-5 h-4 w-4" />
             ) : (
               <UserPlus className="md:h-5 md:w-5 h-4 w-4" />

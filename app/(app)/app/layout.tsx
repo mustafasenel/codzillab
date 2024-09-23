@@ -1,12 +1,12 @@
 import { Metadata } from "next";
 
 import { Separator } from "@/components/ui/separator";
-import { SidebarNav } from "./components/sidebar-nav";
 import Navbar from "@/components/Navbar";
 import getCurrentUser from "@/actions/getCurrentUser";
 import { AiFillHome } from "react-icons/ai";
 import { IoGameController } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
+import { SidebarNav } from "./components/sidebar-nav";
 
 export async function generateMetadata({
   params,

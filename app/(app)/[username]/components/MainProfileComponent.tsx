@@ -1,13 +1,6 @@
 import { FullGameBodyType, FullUserType } from '@/types'
 import React from 'react'
-import { Separator } from "@/components/ui/separator";
 
-import { MdPerson } from "react-icons/md";
-import { IoIosLink } from "react-icons/io";
-import { FaGithub, FaFacebook, FaLinkedin, FaInstagram } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
-import Link from "next/link";
-import Image from 'next/image';
 import Cover from './Cover';
 import ProfileDetails from './ProfileDetails';
 import ProfileLayout from './ProfileLayout';

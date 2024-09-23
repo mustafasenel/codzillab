@@ -4,34 +4,27 @@ import getCurrentUser from "@/actions/getCurrentUser";
 
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
-  const { requestId } = await request.json(); // İstek ID'si frontend'den gelir
+  const { recipientId } = await request.json(); // İstek ID'si frontend'den gelir
 
   if (!currentUser?.id) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
   try {
-    const friendRequest = await prisma.friendRequest.update({
-      where: {
-        id: requestId,
-      },
-      data: {
-        status: "ACCEPTED",
-      },
+
+    const isFollowing = await prisma.follower.findFirst({
+      where:{
+        followerId: currentUser.id,
+        followingId: recipientId
+      }
     });
 
-    if (friendRequest) {
-      await prisma.follower.create({
-        data: {
-          followerId: friendRequest.requesterId, 
-          followingId: friendRequest.recipientId, 
-        },
-      });
-      await prisma.friendRequest.delete({
-        where: {
-          id: requestId,
+    if (isFollowing) {
+      await prisma.follower.delete({
+        where:{
+          id: isFollowing.id
         }
-      })
+      });
     }
 
     return NextResponse.json({
