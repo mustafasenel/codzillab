@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 
-import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/Navbar";
 import getCurrentUser from "@/actions/getCurrentUser";
 import { AiFillHome } from "react-icons/ai";

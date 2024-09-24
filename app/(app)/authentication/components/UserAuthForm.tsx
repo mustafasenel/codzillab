@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,16 +19,10 @@ interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const session = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isCreateAccount, setIsCreateAccount] = React.useState<boolean>(false);
   const [usernameAvailable, setUsernameAvailable] =
     React.useState<boolean>(true);
-
-  const urlError =
-    searchParams.get("error") === "OAuthAccountNotLinked"
-      ? "Email başka bir hesapta kullanılıyor!"
-      : "";
 
   const {
     register,
@@ -247,13 +241,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
               )}
             </div>
           )}
-          {urlError && (
-            <Card className="bg-red-200">
-              <CardContent>
-                <p className="text-red-700">{urlError}</p>
-              </CardContent>
-            </Card>
-          )}
+
           <Button type="submit" disabled={isLoading}>
             {isLoading && (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />

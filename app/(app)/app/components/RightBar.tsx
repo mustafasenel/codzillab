@@ -35,11 +35,11 @@ const RightBar: React.FC<RightBarProps> = ({ user }) => {
         </div>
         <div className="flex flex-col items-center space-y-2 py-6">
           <h2 className="text-xl">
-            {user.name} {user.surname}
+            {user?.name} {user?.surname}
           </h2>
-          <h2 className="text-muted-foreground">@{user.username}</h2>
+          <h2 className="text-muted-foreground">@{user?.username}</h2>
           <p className="text-muted-foreground text-sm">
-            {user.followings?.length} takipçi • {user.followers?.length} takip edilen 
+            {user?.followings?.length} takipçi • {user?.followers?.length} takip edilen 
           </p>
         </div>
       </Card>
