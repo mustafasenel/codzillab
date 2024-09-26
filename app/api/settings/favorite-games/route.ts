@@ -12,6 +12,14 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // Kullanıcının mevcut UserGames kayıtlarını sil
+    await prisma.userGame.deleteMany({
+      where: {
+        userId: currentUser.id,
+      },
+    });
+
+    // Kullanıcı bilgilerini güncelle
     const updatedUser = await prisma.user.update({
       where: {
         id: currentUser.id,
@@ -52,7 +60,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error("Error adding games:", error);
+    console.error("Error updating user games:", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }

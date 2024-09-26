@@ -6,9 +6,13 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { MessageSquareIcon, TrophyIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation"; 
 
 export default async function Home() {
   const currentUser = await getCurrentUser();
+  if (currentUser?.email) {
+    redirect("/app")
+  } 
   return (
     <div className="w-full h-full">
       <Navbar user={currentUser!} />

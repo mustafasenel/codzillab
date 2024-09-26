@@ -105,13 +105,13 @@ const RightSide: React.FC<RightSideProps> = ({ user, currentUser }) => {
                 <p className="text-sm">{user?.country}</p>
               </div>
             )}
-            {user?.country && (
+            {user?.education && (
               <div className="flex items-center gap-2 w-full">
                 <GraduationCap className="h-5 w-5 flex-shrink-0 truncate" size={20} />
                 <p className="text-sm">{user.education} 'da <>{user.educationOnStudy ? "okuyor" : "okudu"}</></p>
               </div>
             )}
-            {user?.country && (
+            {user?.work && (
               <div className="flex items-center gap-2 w-full">
                 <BriefcaseBusiness
                   className="h-5 w-5 flex-shrink-0"
