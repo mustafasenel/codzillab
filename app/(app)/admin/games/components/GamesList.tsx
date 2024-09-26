@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Game } from '@prisma/client'
 import React, { useState } from 'react'
 import { AddGame } from './AddGameModal'
+import Image from 'next/image'
 
 interface GamesListProps {
   games?: Game[]
@@ -36,8 +37,17 @@ const GamesList: React.FC<GamesListProps> = ({ games }) => {
               <CardContent className="aspect-[3/4] p-0 hover:scale-110 transition-all ">
                 <div
                   className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${game.image})` }}
-                ></div>
+                >
+                  <Image
+                    src={game.image!}
+                    alt={game.name}
+                    width={300}
+                    height={300}
+                    placeholder='blur'
+                    blurDataURL={game.image!}
+                    quality={100}
+                  />
+                </div>
               </CardContent>
               <CardFooter className="flex flex-col items-start space-y-1 pt-2 px-2 pb-2">
                 <h2 className="font-semibold">{game.name}</h2>

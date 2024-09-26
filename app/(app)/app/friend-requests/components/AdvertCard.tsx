@@ -59,6 +59,12 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
             alt={"image"}
             className="object-cover"
             quality={100}
+            placeholder="blur"
+            blurDataURL={
+              advert.game.image
+                ? advert.game.image
+                : "https://avatars.githubusercontent.com/u/93220191?v=4"
+            }
             fill
           />
           <Badge className="absolute top-1 left-1 px-1">

@@ -9,6 +9,7 @@ import React, { useState, useEffect } from "react";
 import AdvertCard from "./AdvertCard";
 import { CreateGameMate } from "./CreateGameMate";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface BrowseContentProps {
   user: FullUserType;
@@ -76,8 +77,17 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
                             ? "border-purple-500 border-4"
                             : "border-none"
                         )}
-                        style={{ backgroundImage: `url(${game.image})` }}
-                      ></div>
+                      >
+                        <Image
+                          src={game.image!}
+                          alt={game.name}
+                          width={300}
+                          height={300}
+                          placeholder="blur"
+                          blurDataURL={game.image!}
+                          quality={100}
+                        />
+                      </div>
                     </CardContent>
                     <CardFooter className="flex flex-col items-start space-y-1 pt-2 px-1 pb-2">
                       <h2 className="text-xs">{game.name}</h2>
