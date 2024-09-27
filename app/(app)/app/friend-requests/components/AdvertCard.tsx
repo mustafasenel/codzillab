@@ -47,7 +47,7 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
     );
   }, [advert.createdAt]);
   return (
-    <Card className="relative hover:shadow-sm border transition overflow-hidden rounded-lg h-full min-h-52 flex flex-col p-0">
+    <Card className=" group relative hover:shadow-sm border overflow-hidden rounded-lg h-full min-h-52 flex flex-col p-0 transition-all duration-300">
       <div className="flex-1 space-y-2 flex sm:flex-row flex-col">
         <div className="relative w-full sm:w-1/4 min-h-32 overflow-hidden border-b">
           <Image
@@ -67,10 +67,10 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
             }
             fill
           />
-          <Badge className="absolute top-1 left-1 px-1">
+          <Badge className="hidden group-hover:flex absolute top-1 left-1 px-1 transition-all duration-300">
             {advert.game.name}
           </Badge>
-          <div className="absolute bottom-1 left-1 flex flex-wrap gap-1">
+          <div className="hidden group-hover:flex absolute bottom-1 left-1 flex-wrap gap-1 transition-all duration-300">
             {advert.game.genre.slice(0, 2).map((genre, index) => (
               <Badge key={index} variant="secondary">
                 {genre}

@@ -28,7 +28,7 @@ const MyRequests: React.FC<MyRequestsProps> = ({
 
 
   return (
-    <TabsContent value="myRequests">
+    <div>
       {userGameBodyAdverts == null || userGameBodyAdverts?.length == 0 ? (
         <div className="flex items-center justify-between h-52 gap-6 p-0">
           <Card
@@ -64,7 +64,7 @@ const MyRequests: React.FC<MyRequestsProps> = ({
         onClose={handleCloseModal}
         games={games!}
       />
-    </TabsContent>
+    </div>
   );
 };
 

@@ -129,6 +129,7 @@ export function CreateGameMate({
           toast.success("Oyun başarıyla eklendi!");
           form.reset();
           setFile(undefined);
+          setImageFile("")
         })
         .finally(() => {
           setIsLoading(false);

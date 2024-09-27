@@ -15,6 +15,10 @@ export async function POST(request: Request) {
         if (!Array.isArray(genre) || genre.length === 0) {
             return new NextResponse('Genre must be a non-empty array', { status: 400 });
         }
+        if (!Array.isArray(platform) || platform.length === 0) {
+            return new NextResponse('platform must be a non-empty array', { status: 400 });
+        }
+
 
         let game;
 

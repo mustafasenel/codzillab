@@ -74,7 +74,7 @@ import { platforms } from "@/utils/platforms";
 const gameFormSchema = z.object({
   name: z.string().max(160).min(2),
   genre: z.array(z.string()).max(3),
-  platform: z.string().max(160).min(2),
+  platform: z.array(z.string()),
   image: z.string(),
   id: z.string().optional()
 });
@@ -93,7 +93,7 @@ export function AddGame({ isOpen, onClose, game }: AddGameModalProps) {
   const defaultValues: Partial<gameFormValues> = {
     name: game ? game.name :"",
     genre: game ? game.genre : [],
-    platform: game ? game.platform : "",
+    platform: game ? game.platform : [],
     image: game?.image ?? "",
     id: game ? game.id : ""
   };
@@ -158,6 +158,7 @@ export function AddGame({ isOpen, onClose, game }: AddGameModalProps) {
         .then(() => {
           toast.success("Oyun başarıyla eklendi!");
           form.reset()
+          setFile(undefined);
         })
         .finally(() => {
           setIsLoading(false);
@@ -280,34 +281,81 @@ export function AddGame({ isOpen, onClose, game }: AddGameModalProps) {
                       </FormItem>
                     )}
                   />
-                  <FormField
+                                   <FormField
                     control={form.control}
                     name="platform"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex flex-col justify-end">
                         <FormLabel>Platform</FormLabel>
-                        <Select
-                          value={field.value}
-                          onValueChange={(value) =>
-                            form.setValue("platform", value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Platform seçin" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {platforms.map((platform) => (
-                              <SelectItem
-                                key={platform.value}
-                                value={platform.value}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className="justify-between"
                               >
-                                {platform.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                                {field.value.length > 0
+                                  ? field.value
+                                      .map(
+                                        (value) =>
+                                          platforms.find(
+                                            (genre) => genre.value === value
+                                          )?.label
+                                      )
+                                      .join(", ")
+                                  : "Platform seçin"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="p-0">
+                            <Command>
+                              <CommandInput placeholder="Tür ara..." />
+                              <CommandList className="overflow-y-auto">
+                                <CommandEmpty>Platform bulunamadı.</CommandEmpty>
+                                <CommandGroup>
+                                  {platforms.map((platform) => (
+                                    <CommandItem
+                                      key={platform.value}
+                                      value={platform.value}
+                                      onSelect={() => {
+                                        const selectedGenres =
+                                          getValues("platform");
+                                        if (
+                                          selectedGenres.includes(platform.value)
+                                        ) {
+                                          setValue(
+                                            "platform",
+                                            selectedGenres.filter(
+                                              (val) => val !== platform.value
+                                            )
+                                          );
+                                        } else if (selectedGenres.length < 6) {
+                                          setValue("platform", [
+                                            ...selectedGenres,
+                                            platform.value,
+                                          ]);
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={`mr-2 h-4 w-4 ${
+                                          field.value.includes(platform.value)
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        }`}
+                                      />
+                                      {platform.label}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <FormDescription>
-                          Oyun platformunu seçin
+                          Oyunun platformlarını ekleyin
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

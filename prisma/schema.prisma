@@ -141,7 +141,7 @@ model Game {
   id       String     @id @default(auto()) @map("_id") @db.ObjectId
   name     String     @unique
   genre    String[]
-  platform String // Platform type (PC, Console, etc.)
+  platform String[]
   image    String?
   players  UserGame[] @relation("GameUsers")
   gameBody GameBody[] @relation("GameFriendRequests")

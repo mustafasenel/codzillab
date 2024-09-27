@@ -1,6 +1,7 @@
 import getCurrentUser from "@/actions/getCurrentUser";
 import getGames from "@/actions/getGames";
-import BrowseContent from "./components/BrowseContent";
+import getGameBodyByUserId from "@/actions/getGameBodyByUserId";
+import MyRequests from "../components/MyRequests";
 
 interface IParams {
   username: string;
@@ -13,10 +14,11 @@ const FeriendRequest = async ({ params }: { params: IParams }) => {
   }
 
   const games = await getGames();
+  const userGameBodyAdverts = await getGameBodyByUserId(currentUser.id);
 
   return (
-    <div className="space-y-6 h-[calc(100vh-150px)]">
-      <BrowseContent games={games} user={currentUser} />
+    <div className="space-y-6">
+      <MyRequests user={currentUser} games={games} userGameBodyAdverts={userGameBodyAdverts!}/>
     </div>
   );
 };
