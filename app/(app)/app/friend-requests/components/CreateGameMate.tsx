@@ -35,7 +35,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, Gamepad2, X } from "lucide-react";
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import {
@@ -166,7 +166,7 @@ export function CreateGameMate({
                     name="title"
                     render={({ field }: { field: any }) => (
                       <FormItem className="space-y-4">
-                        <FormLabel className="text-primary">Başlık</FormLabel>
+                        <FormLabel>Başlık</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="Aradığınız oyun arkadaşı için başlık giriniz"
@@ -294,7 +294,7 @@ export function CreateGameMate({
                     name="description"
                     render={({ field }: { field: any }) => (
                       <FormItem className="space-y-4">
-                        <FormLabel className="text-primary">Açıklama</FormLabel>
+                        <FormLabel>Açıklama</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Aradığınız oyun arkadaşıyla ilgili açıklama giriniz."
@@ -321,14 +321,10 @@ export function CreateGameMate({
                         className="w-full"
                       />
                     ) : (
-                      <Image
-                        src={"/anasayfabg.png"}
-                        alt="game"
-                        width={280}
-                        height={300}
-                        quality={100}
-                        className="w-full"
-                      />
+                      <div className="flex items-center justify-center sm:w-[285px] sm:h-[380px] w-full h-full border rounded-2xl shadow-sm">
+                        <Gamepad2 size={40}/>
+                      </div>
+                      
                     )}
                   </div>
                 </div>
