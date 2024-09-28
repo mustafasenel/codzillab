@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "./components/sidebar-nav";
 import Navbar from "@/components/Navbar";
 import getCurrentUser from "@/actions/getCurrentUser";
-import { CoinsIcon, Gamepad, Gamepad2Icon, KeyRound, SquareUserRound, User } from "lucide-react";
+import { Building, CoinsIcon, Gamepad, Gamepad2Icon, KeyRound, SquareUserRound, User } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Codzillab | Ayarlar",
@@ -27,6 +27,11 @@ const sidebarNavItems = [
     title: "Şifre",
     href: "/settings/password",
     icon: <KeyRound size={20}/>
+  },
+  {
+    title: "Organizasyonlarım",
+    href: "/settings/organizations",
+    icon: <Building size={20}/>
   },
   {
     title: "Favori Oyunlar",

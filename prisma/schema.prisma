@@ -60,6 +60,12 @@ model User {
   followers             Follower[]      @relation("followers")
   followings            Follower[]      @relation("followings")
   UserGames             UserGame[]      @relation("UserGames")
+
+  organizationFollowers OrganizationFollower[] @relation("UserOrganizationFollowers")
+
+  // Organizasyon İlişkisi
+  ownedOrganizations Organization[]       @relation("UserOrganizations") // Kullanıcının sahip olduğu organizasyonlar
+  organizations      OrganizationMember[] @relation("OrganizationMembers") // Organizasyona üye olan kullanıcılar
 }
 
 model Account {
@@ -156,4 +162,48 @@ model UserGame {
   game Game @relation("GameUsers", fields: [gameId], references: [id], onDelete: Cascade)
 
   @@index([userId, gameId], map: "unique_usergame")
+}
+
+model Organization {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ownerId     String   @db.ObjectId
+
+  logo            String?
+  cover            String?
+  website         String?
+  location        String?
+  contactEmail    String?
+  contactPhone    String?
+  socialLinks     String[]
+  isActive        Boolean       @default(true)
+  type            String?
+
+  owner     User                   @relation("UserOrganizations", fields: [ownerId], references: [id], onDelete: Cascade)
+  members   OrganizationMember[]
+  followers OrganizationFollower[]
+}
+
+model OrganizationMember {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String       @db.ObjectId
+  organizationId String       @db.ObjectId
+  user           User         @relation("OrganizationMembers", fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model OrganizationFollower {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String @db.ObjectId
+  organizationId String @db.ObjectId
+
+  user         User         @relation("UserOrganizationFollowers", fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
 }

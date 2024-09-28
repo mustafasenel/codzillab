@@ -1,14 +1,8 @@
-import { Metadata } from "next";
-
-import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/Navbar";
-import Image from "next/image";
 import getCurrentUser from "@/actions/getCurrentUser";
 import Cover from "./components/Cover";
 import ProfileDetails from "./components/ProfileDetails";
-import ProfileLayout from "./components/ProfileLayout";
 import getUserById from "@/actions/getUserById";
-import getGameBodyByUserId from "@/actions/getGameBodyByUserId";
 import RightSide from "./components/RightSide";
 import { Gamepad2, SquarePen, User, Users, UsersRound } from "lucide-react";
 import { MenuNav } from "./components/menu-nav";
@@ -20,7 +14,7 @@ interface IParams {
 
 
 
-export default async function SettingsLayout({
+export default async function ProfilePageLayout({
   children,
   params,
 }: {

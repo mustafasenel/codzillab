@@ -4,6 +4,9 @@ import {
   FriendRequest,
   Game,
   GameBody,
+  Organization,
+  OrganizationFollower,
+  OrganizationMember,
   User,
   UserGame,
 } from "@prisma/client";
@@ -30,4 +33,9 @@ export type FullGameBodyType = GameBody & {
 export type FullUserGameType = UserGame & {
   user?: FullUserType;
   game?: Game
+}
+
+export type FullOrganizationType = Organization & {
+  members?: OrganizationMember[];
+  followers?: OrganizationFollower[];
 }

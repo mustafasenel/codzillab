@@ -4,10 +4,9 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
 import { FullGameBodyType, FullUserType } from "@/types";
-import { Game, GameBody } from "@prisma/client";
+import { Game } from "@prisma/client";
 import React, { useState, useEffect } from "react";
 import AdvertCard from "./AdvertCard";
-import { CreateGameMate } from "./CreateGameMate";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -23,37 +22,33 @@ interface BrowseContentProps {
 
 const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedGameBodies, setSelectedGameBodies] = useState<
-    FullGameBodyType[]
-  >([]);
+  const [selectedGameBodies, setSelectedGameBodies] = useState<FullGameBodyType[]>([]);
   const [loading, setLoading] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const [selectedGame, setSelectedGame] = useState("");
+  const [selectedGames, setSelectedGames] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
 
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
 
   const handleGameChange = (gameName: string) => {
-    setSelectedGame(gameName);
+    setSelectedGames(gameName);
   };
 
   const handlePlatformChange = (platformName: string) => {
     setSelectedPlatform(platformName); // Seçilen oyunu state'e atıyoruz
   };
 
-
   const handleSearch = () => {
-    fetchGameBodies(selectedGame)
+    fetchGameBodies(selectedGames, selectedPlatform);
   }
-
-  const fetchGameBodies = async (gameId?: string) => {
+  
+  const fetchGameBodies = async (gameId?: string, platformId?: string) => {
     setLoading(true);
     try {
-      const url = gameId
-        ? `/api/gamebody/gamebodies?gameId=${gameId}`
-        : "/api/gamebody/gamebodies";
+      const url = new URL('/api/gamebody/gamebodies', window.location.origin);
+      if (gameId) url.searchParams.append('gameId', gameId);
+      if (platformId) url.searchParams.append('platformId', platformId);
+      
       const response = await fetch(url);
       const data = await response.json();
       setSelectedGameBodies(data);
@@ -73,21 +68,18 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
   };
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = event.currentTarget.scrollTop;
-    console.log(scrollTop);
     if (scrollTop > 20) {
-      setIsScrolled(true); // Eğer scroll 100px'in üzerindeyse gizle
+      setIsScrolled(true);
     } else {
-      setIsScrolled(false); // Scroll yukarıdaysa göster
+      setIsScrolled(false);
     }
   };
 
   const handleClear = () => {
-    setSelectedGame("");
+    setSelectedGames("");
     fetchGameBodies();
   };
-  useEffect(() => {
-    console.log("Updated selectedGame:", selectedGame);
-  }, [selectedGame]);
+
   return (
     <div className="h-[calc(100vh-150px)]">
       <div
@@ -110,28 +102,14 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
                     )}
                     onClick={() => {
                       handleGameClick(game.id);
-                      setSelectedGame(game.id);
+                      setSelectedGames(game.id);
                     }} // Oyuna tıklama işlemi
                   >
                     <CardContent className="relative aspect-[3/4] p-0 z-10">
-                      {selectedGame && selectedGame === game.id && (
-                        <button
-                          className="group absolute right-1 top-1 transform z-50 cursor-pointer"
-                          onClick={handleClear}
-                        >
-                          <div className="flex h-5 w-5 items-center justify-center rounded-md border border-solid border-gray-500 bg-white transition-all duration-300 hover:h-6 hover:w-6 dark:border-gray-400 dark:bg-slate-800">
-                            <X
-                              className="text-gray-500 dark:text-gray-400"
-                              width={16}
-                              height={16}
-                            />
-                          </div>
-                        </button>
-                      )}
                       <div
                         className={cn(
                           " w-full h-full bg-cover bg-center",
-                          selectedGame && selectedGame == game.id
+                          selectedGames && selectedGames == game.id
                             ? "border-primary border-4 "
                             : "border-none hover:scale-110 transition-all"
                         )}
@@ -147,9 +125,9 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
                         />
                       </div>
                     </CardContent>
-                    <CardFooter className="flex flex-col items-start space-y-1 pt-2 px-1 pb-2">
+                    {/* <CardFooter className="flex flex-col items-start space-y-1 pt-2 px-1 pb-2">
                       <h2 className="text-xs">{game.name}</h2>
-                    </CardFooter>
+                    </CardFooter> */}
                   </Card>
                 ))}
               </div>
@@ -163,7 +141,7 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
           <div className="flex gap-4">
             <SearchGame
               games={games!}
-              value={selectedGame}
+              value={selectedGames}
               onChange={handleGameChange}
             />
             <SearchPlatform
@@ -173,8 +151,8 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
           </div>
           <div className="flex gap-2">
             {
-              (selectedGame || selectedPlatform) && (
-                <Button variant={"outline"} onClick={() => { setSelectedGame(""); setSelectedPlatform("") }}>Temizle</Button>
+              (selectedGames || selectedPlatform) && (
+                <Button variant={"outline"} onClick={() => { setSelectedGames(""); setSelectedPlatform(""); fetchGameBodies() }}>Temizle</Button>
               )
             }
             <Button variant={"secondary"} onClick={handleSearch}>Filtrele</Button>
@@ -208,11 +186,6 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
           </div>
         </div>
       </div>
-      <CreateGameMate
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        games={games!}
-      />
     </div>
   );
 };
