@@ -1,6 +1,5 @@
 import prisma from "@/lib/prismadb";
 import { FullOrganizationType } from "@/types";
-import { Organization } from "@prisma/client";
 
 const getOrganizationsByUserById = async (userId: string): Promise<FullOrganizationType[] | []> => {
   try {

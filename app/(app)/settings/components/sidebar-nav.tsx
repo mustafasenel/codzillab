@@ -34,11 +34,11 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
             pathname === item.href
               ? "bg-muted hover:bg-muted"
               : "hover:bg-transparent hover:underline",
-            "justify-start flex items-center gap-2"
+            "justify-start flex items-center gap-2 md:text-sm text-xs"
           )}
         >
           <div>{item.icon}</div>
-          <span className="hidden md:flex">
+          <span className="flex">
 
           {item.title}
           </span>

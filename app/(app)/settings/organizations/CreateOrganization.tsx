@@ -156,17 +156,23 @@ export function CreateOrganization({
           form.reset();
           setFile(undefined);
           setImageFile("");
+          router.refresh();
+          onClose();
+        })
+        .catch((error) => {
+          const errorMessage = error.response?.data?.message || "Bir hata oluştu";
+          toast.error(errorMessage);
         })
         .finally(() => {
           setIsLoading(false);
-          router.refresh();
-          onClose();
+
         });
     } catch (error) {
-      toast.error("An error occurred");
+      toast.error("Bir hata oluştu");
       console.log(error);
     }
   }
+  
   function getIconForUrl(url: string) {
     if (url) {
       if (url.includes("twitter.com") || url.includes("x.com")) {
@@ -225,7 +231,7 @@ export function CreateOrganization({
                   name="description"
                   render={({ field }: { field: any }) => (
                     <FormItem className="space-y-4">
-                      <FormLabel>Açıklama</FormLabel>
+                      <FormLabel>Hakkında</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Organizasyonunuzu tanıtan kısa açıklama giriniz."

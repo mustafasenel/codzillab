@@ -5,25 +5,16 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
-import { User } from "@prisma/client";
+import { Organization, User } from "@prisma/client";
 import axios from "axios";
 
-import { UploadDropzone } from "@/utils/uploadthing";
-import Image from "next/image";
-import { MdClose } from "react-icons/md";
-
 import { useTheme } from "next-themes";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+
 import { useRouter } from "next/navigation";
 import { SingleImageDropzone } from "@/components/SıngleImageDropzone";
 import { useEdgeStore } from "@/lib/edgestore";
@@ -33,7 +24,7 @@ import { Icons } from "@/components/icons";
 interface CoverModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: User;
+  user?: User | Organization;
 }
 
 export function CoverModal({ isOpen, onClose, user }: CoverModalProps) {
@@ -46,6 +37,15 @@ export function CoverModal({ isOpen, onClose, user }: CoverModalProps) {
   const router = useRouter();
   const { edgestore } = useEdgeStore();
   const { theme } = useTheme();
+
+  const [isOrganization, setIsOrganization] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setIsOrganization('ownerId' in user); 
+    }
+  }, [user]);
+
 
   const onChange = async (file?: File) => {
     if (file) {
@@ -74,7 +74,8 @@ export function CoverModal({ isOpen, onClose, user }: CoverModalProps) {
   const handleSubmit = () => {
     setIsLoading(true);
     try {
-      axios.post("/api/settings/cover-image", { data: coverImage }).then(() => {
+      const endpoint = !isOrganization ? "/api/settings/cover-image" : "/api/organization/cover-image";
+      axios.post(endpoint, { data: coverImage, id: user?.id }).then(() => {
         onClose();
         setCoverImage("");
         setFile(undefined);
