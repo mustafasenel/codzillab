@@ -6,6 +6,7 @@ import { AiFillHome } from "react-icons/ai";
 import { IoGameController } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
 import { SidebarNav } from "./components/sidebar-nav";
+import { Building, Gamepad, Home, Users } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -31,17 +32,22 @@ export default async function TimelineLayout({
     {
       title: "Zaman Akışı",
       href: `/app`,
-      icon: <AiFillHome className="h-6 w-6" />,
+      icon: <Home className="h-6 w-6" />,
     },
     {
       title: "Oyunlar",
       href: `/app/games`,
-      icon: <IoGameController className="h-6 w-6" />,
+      icon: <Gamepad className="h-6 w-6" />,
     },
     {
       title: "Oyun Arkadaşı",
       href: `/app/friend-requests`,
-      icon: <FaUserFriends className="h-6 w-6" />,
+      icon: <Users className="h-6 w-6" />,
+    },
+    {
+      title: "Sayfalar",
+      href: `/app/organizations`,
+      icon: <Building className="h-6 w-6" />,
     },
   ];
 

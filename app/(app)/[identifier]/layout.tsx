@@ -8,6 +8,7 @@ import { Gamepad2, SquarePen, User, Users, UsersRound } from "lucide-react";
 import { MenuNav } from "./components/menu-nav";
 import Link from "next/link";
 import getOrganizationBySlug from "@/actions/getOrganizationBySlug";
+import getOrganizationsByUserById from "@/actions/getOrganizationsByUserId";
 
 interface IParams {
   identifier: string;
@@ -23,6 +24,11 @@ export default async function ProfilePageLayout({
   const currentUser = await getCurrentUser();
   const user = await getUserById(params.identifier);
   const organization = await getOrganizationBySlug(params.identifier);
+
+  let organizations;
+  if(currentUser) {
+    organizations = await getOrganizationsByUserById(currentUser.id);
+  }
 
   const sidebarNavItems = user
     ? [
@@ -70,7 +76,7 @@ export default async function ProfilePageLayout({
   if (!user && !organization) {
     return (
       <div className="w-full h-full">
-        <Navbar user={currentUser!} />
+        <Navbar user={currentUser!} organizations={organizations}/>
         <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-md text-center">
             <div className="mx-auto h-12 w-12 text-primary" />
@@ -94,10 +100,11 @@ export default async function ProfilePageLayout({
   }
 
   const profileUser = user || organization; // Use user if available, otherwise organization
+  
 
   return (
     <div className="w-full h-full">
-      <Navbar user={currentUser!} />
+      <Navbar user={currentUser!} organizations={organizations}/>
       <div className="md:container mx-auto">
         <div className="w-full flex-col py-2 md:px-0 px-2">
           <Cover user={profileUser} currentUser={currentUser} />

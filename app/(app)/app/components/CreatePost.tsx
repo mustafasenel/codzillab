@@ -16,7 +16,7 @@ interface CreatePostProps {
 const CreatePost: React.FC<CreatePostProps> = ({ user }) => {
   return (
     <div className="w-full">
-      <Card className="space-y-6 pt-6">
+      <Card className="space-y-6 pt-6 bg-muted">
         <CardContent className="flex flex-col gap-6">
           <div  className="flex flex-col items-start md:flex-row md:items-center md:justify-between md:gap-6 gap-4">
             <div className="flex items-center justify-center">
@@ -32,7 +32,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ user }) => {
               </Avatar>
             </div>
             <div className="flex-1">
-              <Input placeholder="Neler oluyor?" className="outline-none " />
+              <Input placeholder="Neler oluyor?" className="ring-muted-foreground ring-1" />
             </div>
             <div>
               <Button>Gönder</Button>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "@prisma/client";
+import { Organization, User } from "@prisma/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,9 +36,10 @@ import FriendRequests from "./NavbarComponents/FriendRequests";
 
 interface NavbarProps {
   user?: FullUserType;
+  organizations?: Organization[] | [];
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user }) => {
+const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
   const { setTheme, theme } = useTheme();
   const pathname = usePathname();
 
@@ -165,8 +166,58 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>@{user?.username}</DropdownMenuLabel>
+                <DropdownMenuContent className="w-60">
+                  <DropdownMenuItem>
+                    <Link
+                      className="flex items-center space-x-4 cursor-pointer"
+                      href={`/${user.username}`}
+                    >
+                      <Avatar>
+                        <AvatarImage
+                          src={
+                            user?.image
+                              ? user?.image
+                              : "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/271deea8-e28c-41a3-aaf5-2913f5f48be6/de7834s-6515bd40-8b2c-4dc6-a843-5ac1a95a8b55.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzI3MWRlZWE4LWUyOGMtNDFhMy1hYWY1LTI5MTNmNWY0OGJlNlwvZGU3ODM0cy02NTE1YmQ0MC04YjJjLTRkYzYtYTg0My01YWMxYTk1YThiNTUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.BopkDn1ptIwbmcKHdAOlYHyAOOACXW0Zfgbs0-6BY-E"
+                          }
+                        />
+                        <AvatarFallback>CN</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col justify-between py-1">
+                        <span className="text-sm font-semibold truncate">
+                          {user.name} {user.surname}
+                        </span>
+                        <span className="text-xs font-light truncate">
+                          @{user.username}
+                        </span>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                  {organizations &&
+                    !!organizations.length &&
+                    organizations.map((organization, index) => (
+                      <DropdownMenuItem key={index}>
+                        <Link
+                          className="flex items-center space-x-4 cursor-pointer"
+                          href={`/${organization.slug}`}
+                        >
+                          <Avatar>
+                            <AvatarImage
+                              src={
+                                organization?.logo
+                                  ? organization?.logo
+                                  : "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/271deea8-e28c-41a3-aaf5-2913f5f48be6/de7834s-6515bd40-8b2c-4dc6-a843-5ac1a95a8b55.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzI3MWRlZWE4LWUyOGMtNDFhMy1hYWY1LTI5MTNmNWY0OGJlNlwvZGU3ODM0cy02NTE1YmQ0MC04YjJjLTRkYzYtYTg0My01YWMxYTk1YThiNTUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.BopkDn1ptIwbmcKHdAOlYHyAOOACXW0Zfgbs0-6BY-E"
+                              }
+                            />
+                            <AvatarFallback>CN</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col justify-between py-1">
+                            <span className="text-sm font-semibold truncate">
+                              {organization.name}
+                            </span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem>
@@ -194,7 +245,9 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                       <DropdownMenuItem>
                         <Link
                           href={
-                            !pathname.includes("/admin") ? "/admin/dashboard" : "/app"
+                            !pathname.includes("/admin")
+                              ? "/admin/dashboard"
+                              : "/app"
                           }
                           className="flex items-center gap-2 cursor-pointer"
                         >
