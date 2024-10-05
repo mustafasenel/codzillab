@@ -192,7 +192,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
                       </div>
                     </Link>
                   </DropdownMenuItem>
-                  {organizations &&
+                  {/* {organizations &&
                     !!organizations.length &&
                     organizations.map((organization, index) => (
                       <DropdownMenuItem key={index}>
@@ -217,7 +217,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
                           </div>
                         </Link>
                       </DropdownMenuItem>
-                    ))}
+                    ))} */}
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
                     <DropdownMenuItem>

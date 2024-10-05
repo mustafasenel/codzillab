@@ -10,7 +10,7 @@ interface PostContentProps {
 const PostContent: React.FC<PostContentProps> = ({ user, currentUser }) => {
   return (
     <div className="flex flex-col gap-4">
-      {(user?.id === currentUser?.id || (user as FullOrganizationType)?.ownerId === currentUser?.id) && <CreatePost user={currentUser!} />}
+      {(user?.id === currentUser?.id || (user as FullOrganizationType)?.ownerId === currentUser?.id) && <CreatePost user={currentUser!} isOrganization={!!(user as FullOrganizationType).ownerId} identifier={user}/>}
       <div className="flex flex-col space-y-4">
         <Card className="w-full h-60 flex items-center justify-center bg-muted" >
           Post 1

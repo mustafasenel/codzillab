@@ -1,16 +1,18 @@
 import getCurrentUser from "@/actions/getCurrentUser";
 
 import MainComp from "./components/MainComp";
+import getOrganizationsByUserById from "@/actions/getOrganizationsByUserId";
 
-interface IParams {
-  username: string;
-}
-
-const App = async ({ params }: { params: IParams }) => {
+const App = async () => {
   const currentUser = await getCurrentUser();
+  let organizations;
+  
+  if (currentUser?.id) {
+    organizations = await getOrganizationsByUserById(currentUser?.id);
+  }
   return (
     <div>
-      <MainComp user={currentUser!}/>
+      <MainComp user={currentUser!} organizations={organizations}/>
     </div>
   );
 };
