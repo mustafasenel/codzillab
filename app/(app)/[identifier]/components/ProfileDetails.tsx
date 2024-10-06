@@ -107,7 +107,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   };
   return (
     <div className="flex items-center justify-between pt-4 md:px-0 px-2">
-      <ProfilePictureModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <ProfilePictureModal isOpen={isModalOpen} onClose={handleCloseModal} isOrganization={isOrganization} user={user}/>
       <div className="flex items-center gap-4">
         <div
           className={cn(
@@ -118,7 +118,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
               : user?.id == currentUser?.id && "hover:opacity-80"
           )}
         >
-          {(user as Organization)?.ownerId == currentUser?.id && (
+          {currentUser?.id && user?.id && (user.id === currentUser.id || (user as Organization)?.ownerId === currentUser.id)  && (
             <span
               onClick={handleOpenModal}
               className="absolute bottom-4 right-4 bg-slate-100 p-1 rounded-lg hidden group-hover:block transition-all cursor-pointer hover:bg-slate-300"

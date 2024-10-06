@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
-import { User } from "@prisma/client";
+import { Organization, User } from "@prisma/client";
 import axios from "axios";
 
 
@@ -26,10 +26,11 @@ import { Icons } from "@/components/icons";
 interface ProfilePictureModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: User;
+  user?: User | Organization | null;
+  isOrganization?: boolean;
 }
 
-export function ProfilePictureModal({ isOpen, onClose, user }: ProfilePictureModalProps) {
+export function ProfilePictureModal({ isOpen, onClose, user, isOrganization }: ProfilePictureModalProps) {
   const [open, setOpen] = useState(isOpen);
   const [file, setFile] = useState<File>();
   const [isSubbitted, setIsSubmitting] = useState(false);
@@ -65,14 +66,19 @@ export function ProfilePictureModal({ isOpen, onClose, user }: ProfilePictureMod
 
   const handleSubmit = () => {
     setIsLoading(true);
+    let endpoint;
+    if (isOrganization) {
+      endpoint = `/api/organization/profile-picture`;
+    } else {
+      endpoint = "/api/settings/profile-image"
+    }
     try {
-      axios.post("/api/settings/profile-image", { data: image }).then(() => {
+      axios.post(endpoint, { data: image, id: user?.id }).then(() => {
         onClose();
         setImage("");
         setFile(undefined);
-        setIsLoading(false);
         router.refresh();
-      });
+      }).finally(() => setIsLoading(false));
     } catch (error: any) {
       console.error("Error from cover images posted", error);
     }
@@ -82,7 +88,7 @@ export function ProfilePictureModal({ isOpen, onClose, user }: ProfilePictureMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-xl py-6 min-h-72">
         <DialogHeader>
-          <DialogTitle>Profil Fotoğrafını Güncelle</DialogTitle>
+          <DialogTitle>{isOrganization ? "Organizasyon Logosunu Güncelle" : "Profil Fotoğrafını Güncelle"}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center justify-center w-full space-x-2">
           <div className="flex flex-col space-y-4 w-full">

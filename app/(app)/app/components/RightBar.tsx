@@ -17,7 +17,7 @@ const RightBar: React.FC<RightBarProps> = ({ user, organizations }) => {
     <div className="flex flex-col w-full gap-4">
       <Card className="p-0 flex flex-col">
         <div
-          className="w-full h-32 bg-origin-content bg-cover bg-center rounded-t-xl"
+          className="w-full h-24 bg-origin-content bg-cover bg-center rounded-t-xl"
           style={{
             backgroundImage: user?.coverImage
               ? `url(${user.coverImage})`
@@ -53,7 +53,7 @@ const RightBar: React.FC<RightBarProps> = ({ user, organizations }) => {
           organizations.map((organization, index) => (
             <Card className="p-0 flex flex-col" key={index}>
             <div
-              className="w-full h-32 bg-origin-content bg-cover bg-center rounded-t-xl"
+              className="w-full h-24 bg-origin-content bg-cover bg-center rounded-t-xl"
               style={{
                 backgroundImage: organization?.cover
                   ? `url(${organization.cover})`
@@ -70,7 +70,7 @@ const RightBar: React.FC<RightBarProps> = ({ user, organizations }) => {
                 alt="avatar-image"
                 width={100}
                 height={100}
-                className="w-28 h-28 -mt-14 rounded-full object-cover object-center border-4"
+                className="w-28 h-28 -mt-14 rounded-xl object-cover object-center border-4"
                 unoptimized
               />
             </div>
