@@ -29,7 +29,8 @@ export const authOptions: AuthOptions = {
       profile(profile) {
         return {
           id: profile.sub,
-          name: profile.name,
+          name: profile.given_name,
+          surname: profile.family_name,
           username: profile.sub,
           email: profile.email,
           image: profile.picture,
@@ -49,6 +50,7 @@ export const authOptions: AuthOptions = {
         }
         return {
           id: profile.id,
+          name: profile.name,
           username: profile.username,
           email: profile.email,
           image: profile.image_url,

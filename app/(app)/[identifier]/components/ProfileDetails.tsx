@@ -75,7 +75,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
     };
 
     checkFollow();
-  }, [user, currentUser]);
+  }, [user, currentUser, isOrganization]);
 
   const handleFollow = () => {
     setIsLoading(true);

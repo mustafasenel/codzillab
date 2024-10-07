@@ -4,11 +4,11 @@ import GameBodyContent from "../components/GameBodyContent";
 import getGameBodyByUserId from "@/actions/getGameBodyByUserId";
 
 interface IParams {
-  username: string;
+  identifier: string;
 }
 
 const GameBody = async ({ params }: { params: IParams }) => {
-  const user = await getUserById(params.username);
+  const user = await getUserById(params.identifier);
   const userGameBodyAdverts = await getGameBodyByUserId(user?.id);
 
   return (

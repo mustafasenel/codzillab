@@ -37,6 +37,8 @@ const profileFormSchema = z.object({
     })
     .max(30, {
       message: "Kullanıcı adı en az 30 karakterden uzun olamaz.",
+    }).regex(/^[^\s:;,.\/\\?]+$/, {
+      message: "Kullanıcı adı özel karakterler içermemelidir: ; , / \\ ?",
     }),
   email: z
     .string({

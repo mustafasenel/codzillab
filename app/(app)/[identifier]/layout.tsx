@@ -9,6 +9,8 @@ import { MenuNav } from "./components/menu-nav";
 import Link from "next/link";
 import getOrganizationBySlug from "@/actions/getOrganizationBySlug";
 import getOrganizationsByUserById from "@/actions/getOrganizationsByUserId";
+import { Suspense } from "react";
+import LoadingModal from "@/components/LoadingModal";
 
 interface IParams {
   identifier: string;
@@ -103,6 +105,8 @@ export default async function ProfilePageLayout({
   
 
   return (
+    <Suspense fallback={<LoadingModal />}>
+
     <div className="w-full h-full">
       <Navbar user={currentUser!} organizations={organizations}/>
       <div className="md:container mx-auto">
@@ -123,5 +127,6 @@ export default async function ProfilePageLayout({
         </div>
       </div>
     </div>
+    </Suspense>
   );
 }

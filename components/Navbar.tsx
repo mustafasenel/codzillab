@@ -30,7 +30,7 @@ import Image from "next/image";
 import { Separator } from "./ui/separator";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { UserPlus2 } from "lucide-react";
+import { Bell, UserPlus, UserPlus2 } from "lucide-react";
 import { FullFriendRequestType, FullUserType } from "@/types";
 import FriendRequests from "./NavbarComponents/FriendRequests";
 
@@ -85,14 +85,17 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <IoNotifications className="h-[1.2rem] w-[1.2rem] transition-all" />
+                <Bell className="h-5 w-5 transition-all" />
                 <span className="sr-only">notifications</span>
               </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="min-w-80 h-80">
-              <DropdownMenuLabel className="text-lg">
-                Bildirimler
+              <DropdownMenuLabel>
+              <div className="flex items-center gap-4">
+                  <Bell />
+                  <span>Bildirimler</span>
+                </div>
               </DropdownMenuLabel>
               <Separator />
               {/* Bildirimler burada listelenecek */}
@@ -108,7 +111,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <div className="relative">
-                  <IoPersonAddSharp className="h-[1.2rem] w-[1.2rem] transition-all " />
+                  <UserPlus className=" h-5 w-5 transition-all " />
                   <span className="sr-only">user request</span>
                   {friendRequests > 0 && (
                     <span className="absolute w-4 h-4 rounded-full text-xs -top-2 -right-2 bg-red-500 ring-1 dark:ring-black ring-white text-white flex items-center justify-center">
@@ -121,7 +124,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
             <DropdownMenuContent align="end" className="min-w-80 h-80">
               <DropdownMenuLabel>
                 <div className="flex items-center gap-4">
-                  <UserPlus2 />
+                  <UserPlus />
                   <span>Arkadaşlık İstekleri</span>
                 </div>
               </DropdownMenuLabel>
