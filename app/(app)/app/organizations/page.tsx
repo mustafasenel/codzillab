@@ -14,7 +14,7 @@ const Organizations = async ({ params }: { params: IParams }) => {
       <div>
         <h3 className="text-xl font-medium">Sayfalar</h3>
       </div>
-      <OrganizationExplore organizations={organizations}/>
+      <OrganizationExplore organizations={organizations} currentUser={currentUser!}/>
     </div>
   );
 };

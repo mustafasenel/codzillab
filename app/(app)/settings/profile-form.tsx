@@ -43,7 +43,7 @@ const profileFormSchema = z.object({
       required_error: "Lütfen e-mail giriniz.",
     })
     .email(),
-  bio: z.string().max(300).min(4).optional(),
+  bio: z.string().max(300).optional(),
   name: z.string().max(160).min(2),
   surname: z.string().max(160).min(2),
   links: z

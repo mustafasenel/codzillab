@@ -61,8 +61,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   useEffect(() => {
     const checkFollow = async () => {
       if (user && currentUser) {
+        const endpoint = isOrganization ? "/api/organization/follow/check-follow" : "/api/user/follow/check-follow"
         try {
-          const response = await axios.post("/api/user/follow/check-follow", {
+          const response = await axios.post(endpoint, {
             recipientId: user.id,
           });
 
@@ -79,27 +80,42 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   const handleFollow = () => {
     setIsLoading(true);
     try {
-      if (!isFollowing) {
-        axios
-          .post("/api/user/follow", {
-            recipientId: user?.id,
-          })
-          .then(() => {
-            isRequestSent
-              ? toast.success("Arkadaşlık isteği geri çekildi")
-              : toast.success("Arkadaşlık isteği gönderildi");
-            router.refresh();
-          })
-          .finally(() => setIsLoading(false));
+      if (!isOrganization) {
+        if (!isFollowing) {
+          axios
+            .post("/api/user/follow", {
+              recipientId: user?.id,
+            })
+            .then(() => {
+              isRequestSent
+                ? toast.success("Arkadaşlık isteği geri çekildi")
+                : toast.success("Arkadaşlık isteği gönderildi");
+              router.refresh();
+            })
+            .finally(() => setIsLoading(false));
+        } else {
+          axios
+            .post("/api/user/follow/unfollow", {
+              recipientId: user?.id,
+            })
+            .then(() => {
+              router.refresh();
+            })
+            .finally(() => setIsLoading(false));
+        }
       } else {
+        // Organization İçin takip ve takipten çıkma
         axios
-          .post("/api/user/follow/unfollow", {
-            recipientId: user?.id,
-          })
-          .then(() => {
-            router.refresh();
-          })
-          .finally(() => setIsLoading(false));
+            .post("/api/organization/follow", {
+              recipientId: user?.id,
+            })
+            .then(() => {
+              isFollowing
+                ? toast.success("Takipten çıkıldı")
+                : toast.success("Takip ediliyor");
+              router.refresh();
+            })
+            .finally(() => setIsLoading(false));
       }
     } catch (error: any) {
       console.error(error);
