@@ -1,63 +1,284 @@
 "use client";
 
+import {
+  FileState,
+  MultiImageDropzone,
+} from "@/components/MultipleImageDropzone";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useEdgeStore } from "@/lib/edgestore";
+import { cn } from "@/lib/utils";
 import { FullOrganizationType, FullUserType } from "@/types";
 import { CalendarClock, Image, Video } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+import { z } from "zod";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+
+const PostFormSchema = z.object({
+  content: z.string().min(1, "Şehir alanı doldurulması zorunlu"),
+  attachments: z
+    .array(
+      z.object({
+        url: z.string(),
+      })
+    )
+    .optional(),
+});
+
+// Types for form values
+type PostFormValues = z.infer<typeof PostFormSchema>;
 
 interface CreatePostProps {
   user: FullUserType;
   isOrganization?: Boolean;
-  identifier?: FullUserType | FullOrganizationType | null
+  identifier?: FullUserType | FullOrganizationType | null;
 }
 
-const CreatePost: React.FC<CreatePostProps> = ({ user, isOrganization, identifier }) => {
+const CreatePost: React.FC<CreatePostProps> = ({
+  user,
+  isOrganization,
+  identifier,
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const [rows, setRows] = useState(1);
+  const [openImageUpload, setOpenImageUpload] = useState(false);
+
+  const handleFocus = () => {
+    setRows(4);
+  };
+  const handleBlur = () => {
+    setRows(1);
+  };
+
+  const handleClickOutside = (event: any) => {
+    const textarea = document.getElementById("my-textarea"); // Textarea'nın ID'sini ayarlayın
+    if (textarea && !textarea.contains(event.target)) {
+      handleBlur(); // Textarea dışında bir yere tıklandığında satır sayısını düşür
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+  const handleUploadImage = () => {
+    setOpenImageUpload(!openImageUpload);
+  };
+
+  const [fileStates, setFileStates] = useState<FileState[]>([]);
+  const { edgestore } = useEdgeStore();
+
+  function updateFileProgress(
+    key: string,
+    progress: FileState["progress"],
+    url?: string
+  ) {
+    setFileStates((fileStates) => {
+      const newFileStates = structuredClone(fileStates);
+      const fileState = newFileStates.find(
+        (fileState) => fileState.key === key
+      );
+      if (fileState) {
+        fileState.progress = progress;
+        if (url) {
+          fileState.url = url; // publicUrl'yi güncelle
+        }
+      }
+      return newFileStates;
+    });
+  }
+
+  const form = useForm<PostFormValues>({
+    resolver: zodResolver(PostFormSchema),
+  });
+
+  const { setValue, getValues } = form;
+
+  // Function to handle form submission
+  function onSubmit(data: PostFormValues) {
+    try {
+      setIsLoading(true);
+      axios
+        .post("/api", data)
+        .then(() => {
+          toast.success("Post oluşturuldu!");
+        })
+        .finally(() => {
+          setIsLoading(false);
+          router.refresh();
+        });
+    } catch (error) {
+      toast.error("An error occurred");
+      console.log(error);
+    }
+  }
+
+  const handleDeleteFile = async (file: string) => {
+    if (file) {
+      await edgestore.publicFiles.delete({
+        url: file,
+      });
+      // Önceki değeri alın
+      const previousAttachments = getValues("attachments") || [];
+
+      // Yeni değeri ayarlayın
+      const updatedAttachments = previousAttachments.filter(
+        (attachment: { url: string }) => attachment.url !== file
+      );
+      setValue("attachments", updatedAttachments);
+    }
+  };
+
   return (
     <div className="w-full">
-      <Card className="space-y-6 pt-6 bg-muted">
-        <CardContent className="flex flex-col gap-6">
-          <div  className="flex flex-col items-start md:flex-row md:items-center md:justify-between md:gap-6 gap-4">
-            <div className="flex items-center justify-center">
-              <Avatar>
-                <AvatarImage
-            src={
-              isOrganization
-                ? (identifier as FullOrganizationType)?.logo ||
-                  "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/97f7fb0e435bdd42e9b50113e67abf36"
-                : (user as FullUserType)?.image ||
-                  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/271deea8-e28c-41a3-aaf5-2913f5f48be6/de7834s-6515bd40-8b2c-4dc6-a843-5ac1a95a8b55.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzI3MWRlZWE4LWUyOGMtNDFhMy1hYWY1LTI5MTNmNWY0OGJlNlwvZGU3ODM0cy02NTE1YmQ0MC04YjJjLTRkYzYtYTg0My01YWMxYTk1YThiNTUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.BopkDn1ptIwbmcKHdAOlYHyAOOACXW0Zfgbs0-6BY-E"
-            }
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <Card className="space-y-6 pt-6 bg-muted">
+            <CardContent className="flex flex-col gap-6">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                <div className="flex items-center justify-center">
+                  <Avatar>
+                    <AvatarImage
+                      src={
+                        isOrganization
+                          ? (identifier as FullOrganizationType)?.logo ||
+                            "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/97f7fb0e435bdd42e9b50113e67abf36"
+                          : (user as FullUserType)?.image ||
+                            "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/271deea8-e28c-41a3-aaf5-2913f5f48be6/de7834s-6515bd40-8b2c-4dc6-a843-5ac1a95a8b55.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzI3MWRlZWE4LWUyOGMtNDFhMy1hYWY1LTI5MTNmNWY0OGJlNlwvZGU3ODM0cy02NTE1YmQ0MC04YjJjLTRkYzYtYTg0My01YWMxYTk1YThiNTUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.BopkDn1ptIwbmcKHdAOlYHyAOOACXW0Zfgbs0-6BY-E"
+                      }
+                    />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex-1 flex md:justify-center w-full">
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }: { field: any }) => (
+                      <FormItem className="w-full">
+                        <FormControl>
+                          <Textarea
+                            id="my-textarea"
+                            placeholder="Neler oluyor? #Hashtag @mention"
+                            className="min-h-9 max-h-72 bg-background transition-all duration-300 resize-none overflow-y-auto"
+                            rows={rows}
+                            onFocus={handleFocus}
+                            {...field}
+                            disabled={isLoading}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <Button type="submit" disabled={isLoading}>Gönder</Button>
+                </div>
+              </div>
+
+              {/* Alt butonlar ve dropzone */}
+              <div className="flex flex-col items-center">
+                <MultiImageDropzone
+                  className={cn(openImageUpload ? "mb-4" : "hidden")}
+                  value={fileStates}
+                  dropzoneOptions={{
+                    maxFiles: 4,
+                  }}
+                  onChange={(files) => {
+                    setFileStates(files);
+                  }}
+                  onDelete={async (file) => {
+                    await handleDeleteFile(file);
+                  }}
+                  onFilesAdded={async (addedFiles) => {
+                    const newFiles = await Promise.all(
+                      addedFiles.map(async (addedFileState) => {
+                        try {
+                          const res = await edgestore.publicFiles.upload({
+                            file:
+                              addedFileState.file instanceof File
+                                ? addedFileState.file
+                                : new File([], ""), // Eğer stringse boş bir File oluştur
+                            onProgressChange: async (progress) => {
+                              updateFileProgress(addedFileState.key, progress);
+                              if (progress === 100) {
+                                await new Promise((resolve) =>
+                                  setTimeout(resolve, 1000)
+                                );
+                              }
+                            },
+                          });
+                          updateFileProgress(
+                            addedFileState.key,
+                            "COMPLETE",
+                            res.url
+                          );
+                          // Dosya durumunu güncelle
+                          return {
+                            file: addedFileState.file,
+                            url: res.url, // URL'yi burada ekliyoruz
+                            key: addedFileState.key,
+                            progress: "COMPLETE", // veya başlangıçta "PENDING" olabilir
+                          };
+                        } catch (err) {
+                          updateFileProgress(addedFileState.key, "ERROR");
+                          return null; // Hata durumunda null döndür
+                        }
+                      })
+                    );
+
+                    const validFiles = newFiles.filter(Boolean);
+                    setValue(
+                      "attachments",
+                      validFiles.map((file) => ({ url: file?.url! })) // URL'leri form değerine ekle
+                    );
+                  }}
                 />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="flex-1">
-              <Input placeholder="Neler oluyor?" className="ring-muted-foreground ring-1" />
-            </div>
-            <div>
-              <Button>Gönder</Button>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 items-start md:flex-row md:items-center md:justify-between md:gap-6">
-              <Button className="gap-2" variant={"ghost"}>
-                <Image size={20}/>
-                Görsel Yükle
-              </Button>
-              <Button className="gap-2" variant={"ghost"}>
-                <Video size={20}/>
-                Video Yükle
-              </Button>
-              <Button className="gap-2" variant={"ghost"}>
-                <CalendarClock size={20}/>
-                Etkinlik Oluştur
-              </Button>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="w-full flex flex-row items-center justify-between gap-4 md:gap-6">
+                  <Button
+                    className="gap-2 hover:bg-primary-foreground"
+                    variant={"ghost"}
+                    onClick={handleUploadImage}
+                    type="button"
+                    id="image-upload-button"
+                  >
+                    <Image size={20} />
+                    Görsel Yükle
+                  </Button>
+                  <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button">
+                    <Video size={20} />
+                    Video Yükle
+                  </Button>
+                  <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button">
+                    <CalendarClock size={20} />
+                    Etkinlik Oluştur
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
     </div>
   );
 };

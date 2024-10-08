@@ -13,8 +13,8 @@ interface MainCompProps {
 
 const MainComp: React.FC<MainCompProps> = ({ user, organizations }) => {
   return (
-    <div className="grid grid-cols-6 space-y-4 lg:flex-row lg:space-x-6 lg:space-y-0 mb-10">
-      <div className="md:col-span-4 col-span-6 flex flex-col gap-6">
+    <div className="grid grid-cols-6 space-y-4 lg:flex-row lg:space-x-4 lg:space-y-0 mb-10">
+      <div className="md:col-span-4 col-span-6 flex flex-col gap-4">
         <CreatePost user={user} />
         <Timeline user={user} />
       </div>

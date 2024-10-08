@@ -58,7 +58,7 @@ export default async function TimelineLayout({
         <aside className="md:w-60 w-fit sticky top-0 h-screen">
           <SidebarNav items={sidebarNavItems} />
         </aside>
-        <main className="flex-1 overflow-y-auto px-2 md:px-6 mb-10 hidden-scrollbar ">{children}</main>
+        <main className="flex-1 overflow-y-auto px-2 md:px-4 mb-10 hidden-scrollbar ">{children}</main>
       </div>
     </div>
   );

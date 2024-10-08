@@ -66,6 +66,10 @@ model User {
   // Organizasyon İlişkisi
   ownedOrganizations Organization[]       @relation("UserOrganizations") // Kullanıcının sahip olduğu organizasyonlar
   organizations      OrganizationMember[] @relation("OrganizationMembers") // Organizasyona üye olan kullanıcılar
+
+  posts    Post[]    @relation("UserPosts")
+  likes    Like[]    @relation("UserLikes")
+  comments Comment[] @relation("UserComments")
 }
 
 model Account {
@@ -173,19 +177,20 @@ model Organization {
   updatedAt   DateTime @updatedAt
   ownerId     String   @db.ObjectId
 
-  logo            String?
-  cover            String?
-  website         String?
-  location        String?
-  contactEmail    String?
-  contactPhone    String?
-  socialLinks     String[]
-  isActive        Boolean       @default(true)
-  type            String?
+  logo         String?
+  cover        String?
+  website      String?
+  location     String?
+  contactEmail String?
+  contactPhone String?
+  socialLinks  String[]
+  isActive     Boolean  @default(true)
+  type         String?
 
   owner     User                   @relation("UserOrganizations", fields: [ownerId], references: [id], onDelete: Cascade)
   members   OrganizationMember[]
   followers OrganizationFollower[]
+  posts     Post[]                 @relation("OrganizationPosts")
 }
 
 model OrganizationMember {
@@ -207,4 +212,102 @@ model OrganizationFollower {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
+}
+
+enum PostType {
+  POST
+  EVENT
+}
+
+enum PostStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+enum CommentStatus {
+  ACTIVE
+  DISABLE
+}
+
+model Post {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  attachments   Media[]
+  content       String
+  type          PostType      @default(POST)
+  status        PostStatus    @default(ACTIVE)
+  commentStatus CommentStatus @default(ACTIVE)
+  isPromoted    Boolean       @default(false)
+  location      String?
+  eventDate     DateTime?
+  viewCount     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  userId String? @db.ObjectId
+  user   User?   @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)
+
+  organizationId String?       @db.ObjectId
+  organization   Organization? @relation("OrganizationPosts", fields: [userId], references: [id], onDelete: Cascade)
+
+  tags     PostTag[] @relation("PostTags")
+  likes    Like[]    @relation("PostLikes")
+  comments Comment[] @relation("PostComments")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model Media {
+  id     String    @id @default(auto()) @map("_id") @db.ObjectId
+  postId String?   @db.ObjectId
+  post   Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
+  type   MediaType
+  url    String
+
+  createdAt DateTime @default(now())
+
+  @@map("post_media")
+}
+
+model Tag {
+  id    String    @id @default(auto()) @map("_id") @db.ObjectId
+  name  String    @unique
+  posts PostTag[] // PostTag ile ilişki
+}
+
+model PostTag {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  postId String @db.ObjectId
+  tagId  String @db.ObjectId
+
+  post Post @relation("PostTags", fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, tagId])
+}
+
+model Like {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String  @db.ObjectId
+  postId    String? @db.ObjectId
+  commentId String? @db.ObjectId
+
+  user    User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation("PostLikes", fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment? @relation("CommentLikes", fields: [commentId], references: [id], onDelete: Cascade) // Yorum ile ilişki
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  createdAt DateTime @default(now())
+  postId    String   @db.ObjectId
+  post      Post     @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+  userId    String?  @db.ObjectId
+  user      User?    @relation("UserComments", fields: [userId], references: [id], onDelete: Cascade)
+
+  likes Like[] @relation("CommentLikes")
 }

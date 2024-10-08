@@ -8,7 +8,7 @@ interface TimelineProps {
 
 const Timeline:React.FC<TimelineProps> = ({ user }) => {
   return (
-    <div className='flex flex-col space-y-6'>
+    <div className='flex flex-col space-y-4'>
       <Card className='w-full h-60 flex items-center justify-center'>
             Post 1
       </Card>

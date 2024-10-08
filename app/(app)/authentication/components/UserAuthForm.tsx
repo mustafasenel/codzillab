@@ -12,7 +12,6 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -77,7 +76,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       if (password !== passwordAgain) {
         setError("passwordAgain", {
           type: "manual",
-          message: "Passwords do not match",
+          message: "Şifreler eşleşmiyor",
         });
       } else {
         clearErrors("passwordAgain"); // Hata yoksa hatayı temizliyoruz
@@ -108,10 +107,10 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       })
         .then((callback) => {
           if (callback?.error) {
-            toast.error("Invalid credentials!");
+            toast.error("Lütfen bilgilerinizi kontrol edin!");
           }
           if (callback?.ok && !callback?.error) {
-            toast.success("Successfully logged in!");
+            //toast.success("Successfully logged in!");
             router.push("/app");
           }
         })
