@@ -29,9 +29,12 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const PostFormSchema = z.object({
-  content: z.string().min(1, "Şehir alanı doldurulması zorunlu"),
+  content: z.string().min(1, "Post boş olamaz"),
+  userId_organizationId: z.string(),
+  isOrganization: z.boolean(),
   attachments: z
     .array(
       z.object({
@@ -55,8 +58,10 @@ const CreatePost: React.FC<CreatePostProps> = ({
   isOrganization,
   identifier,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const [isLoading, setIsLoading] = useState(false);
   const [rows, setRows] = useState(1);
   const [openImageUpload, setOpenImageUpload] = useState(false);
 
@@ -112,26 +117,63 @@ const CreatePost: React.FC<CreatePostProps> = ({
     resolver: zodResolver(PostFormSchema),
   });
 
-  const { setValue, getValues } = form;
+  const { setValue, getValues, reset } = form;
 
-  // Function to handle form submission
-  function onSubmit(data: PostFormValues) {
-    try {
-      setIsLoading(true);
-      axios
-        .post("/api", data)
-        .then(() => {
-          toast.success("Post oluşturuldu!");
-        })
-        .finally(() => {
-          setIsLoading(false);
-          router.refresh();
-        });
-    } catch (error) {
-      toast.error("An error occurred");
-      console.log(error);
+  useEffect(()=> {
+    if (isOrganization && identifier?.id) {
+      setValue("userId_organizationId", identifier?.id)
+    } else {
+      setValue("userId_organizationId", user.id)
     }
-  }
+    setValue("isOrganization", isOrganization === true);
+  }, [identifier, user, isOrganization])
+
+
+
+  const mutation = useMutation({
+    mutationFn: async (data: PostFormValues) => {
+      const response = await axios.post('/api/post/create', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Post oluşturuldu!");
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+    onError: () => {
+      toast.error("An error occurred");
+    },
+    onSettled: () => {
+      reset(); 
+      setFileStates([]); 
+      setIsLoading(false); 
+    },
+  });
+  const onSubmit = (data: PostFormValues) => {
+    mutation.mutate(data);
+    setIsLoading(true);
+  };
+
+
+  // function onSubmit(data: PostFormValues) {
+  //   try {
+  //     setIsLoading(true);
+  //     axios
+  //       .post("/api/post/create", data)
+  //       .then(() => {
+  //         toast.success("Post oluşturuldu!");
+  //         router.refresh();
+  //         reset
+  //       })
+  //       .finally(() => {
+  //         setIsLoading(false);
+ 
+  //         setFileStates([])
+  //       });
+  //   } catch (error) {
+  //     toast.error("An error occurred");
+  //     console.log(error);
+  //   }
+  // }
 
   const handleDeleteFile = async (file: string) => {
     if (file) {
@@ -156,7 +198,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
           <Card className="space-y-6 pt-6 bg-muted">
             <CardContent className="flex flex-col gap-6">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-start md:justify-center">
                   <Avatar>
                     <AvatarImage
                       src={
@@ -254,7 +296,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
                     );
                   }}
                 />
-                <div className="w-full flex flex-row items-center justify-between gap-4 md:gap-6">
+                <div className="w-full flex flex-col md:flex-row items-start md:items-center  justify-between gap-4 md:gap-6">
                   <Button
                     className="gap-2 hover:bg-primary-foreground"
                     variant={"ghost"}

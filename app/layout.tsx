@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeProvider";
 import ToasterContext from "@/context/ToasterContext";
 import AuthContext from "@/context/AuthContext";
 import { EdgeStoreProvider } from "@/lib/edgestore";
+import TanstackProvider from "@/context/QueryClientProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthContext>
-            <EdgeStoreProvider>{children}</EdgeStoreProvider>
+            <EdgeStoreProvider>
+              <TanstackProvider>{children}</TanstackProvider>
+            </EdgeStoreProvider>
           </AuthContext>
           <ToasterContext />
         </ThemeProvider>
