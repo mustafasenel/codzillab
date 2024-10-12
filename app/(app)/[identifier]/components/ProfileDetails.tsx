@@ -12,27 +12,61 @@ import { ProfilePictureModal } from "./ProfilePictureModal";
 import { Icons } from "@/components/icons";
 import toast from "react-hot-toast";
 import { Organization } from "@prisma/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import ProfileDetailsSkeleton from "./ProfileDetailsSkeletton";
 
 interface ProfileDetailsProps {
   user?: FullUserType | FullOrganizationType | null;
   currentUser?: FullUserType | null;
+  identifier: string;
 }
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({
-  user,
   currentUser,
+  identifier
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const [isRequestSent, setIsRequestSent] = useState(false); // İstek gönderilmiş mi?
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isRequestSent, setIsRequestSent] = useState(false);
 
   const router = useRouter();
 
   const [isOrganization, setIsOrganization] = useState(false);
+
+  const {
+    data: userQuery,
+    isLoading: userLoading,
+  } = useQuery({
+    queryKey: ["user", identifier],
+    queryFn: async () => {
+      const response = await axios.get(`/api/users/${identifier}`); // Kullanıcı API'sini çağır
+      return response.data; // Yanıtı döndür
+    },
+    enabled: !!identifier, // identifier varsa sorguyu etkinleştir
+  });
+
+  // Organizasyon bilgisi için useQuery
+  const {
+    data: organizationQuery,
+    isLoading: organizationLoading,
+  } = useQuery({
+    queryKey: ["organization", identifier],
+    queryFn: async () => {
+      const response = await axios.get(`/api/organizations/${identifier}`); // Organizasyon API'sini çağır
+      return response.data; // Yanıtı döndür
+    },
+    enabled: !!identifier  // identifier varsa sorguyu etkinleştir
+  });
+
+
+    const singleUser = userQuery || null;
+    const organization = organizationQuery || null;
+
+    const user = singleUser || organization;
+
 
   useEffect(() => {
     if (user) {
@@ -40,90 +74,147 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
     }
   }, [user]);
 
+  const queryClient = useQueryClient();
+
+  // Fetch the friend request status
+  const {
+    data: requestStatus,
+    isLoading: requestLoading,
+    error: requestError,
+  } = useQuery({
+    queryKey: ["checkFriendRequest", user?.id],
+    queryFn: async () => {
+      const response = await axios.post("/api/user/follow/check-request", {
+        recipientId: user?.id,
+      });
+      return response.data;
+    },
+    enabled: !!user?.id && isOrganization, // Only fetch when user.id is available
+  });
+
+  // Fetch the follow status
+  const {
+    data: followStatus,
+    isLoading: followLoading,
+    error: followError,
+  } = useQuery({
+    queryKey: ["checkFollow", user?.id, isOrganization],
+    queryFn: async () => {
+      const endpoint = isOrganization
+        ? "/api/organization/follow/check-follow"
+        : "/api/user/follow/check-follow";
+      const response = await axios.post(endpoint, {
+        recipientId: user?.id,
+      });
+      return response.data;
+    },
+    enabled: !!user?.id && !!currentUser, // Only fetch when user.id and currentUser are available
+  });
+
+  // Durum güncellemeleri
   useEffect(() => {
-    const checkFriendRequest = async () => {
-      if (user && currentUser) {
-        try {
-          const response = await axios.post("/api/user/follow/check-request", {
-            recipientId: user.id,
-          });
-
-          setIsRequestSent(response.data.hasRequest);
-        } catch (error: any) {
-          console.error("İstek kontrol edilemedi:", error);
-        }
-      }
-    };
-
-    checkFriendRequest();
-  }, [user, currentUser]);
+    if (requestStatus && isOrganization) {
+      setIsRequestSent(requestStatus.hasRequest);
+    }
+  }, [requestStatus, user]);
 
   useEffect(() => {
-    const checkFollow = async () => {
-      if (user && currentUser) {
-        const endpoint = isOrganization ? "/api/organization/follow/check-follow" : "/api/user/follow/check-follow"
-        try {
-          const response = await axios.post(endpoint, {
-            recipientId: user.id,
-          });
+    if (followStatus) {
+      setIsFollowing(followStatus.hasRequest);
+    }
+  }, [followStatus, user]);
 
-          setIsFollowing(response.data.hasRequest);
-        } catch (error: any) {
-          console.error("İstek kontrol edilemedi:", error);
-        }
-      }
-    };
-
-    checkFollow();
-  }, [user, currentUser, isOrganization]);
-
-  const handleFollow = () => {
-    setIsLoading(true);
-    try {
+  // Mutation for following/unfollowing a user or organization
+  const followMutation = useMutation({
+    mutationKey: ["follow", user?.id, isOrganization], // Using mutationKey for tracking
+    mutationFn: async () => {
       if (!isOrganization) {
-        if (!isFollowing) {
-          axios
-            .post("/api/user/follow", {
-              recipientId: user?.id,
-            })
-            .then(() => {
-              isRequestSent
-                ? toast.success("Arkadaşlık isteği geri çekildi")
-                : toast.success("Arkadaşlık isteği gönderildi");
-              router.refresh();
-            })
-            .finally(() => setIsLoading(false));
+        if (!followStatus?.hasRequest) {
+          return axios.post("/api/user/follow", {
+            recipientId: user?.id,
+          });
         } else {
-          axios
-            .post("/api/user/follow/unfollow", {
-              recipientId: user?.id,
-            })
-            .then(() => {
-              router.refresh();
-            })
-            .finally(() => setIsLoading(false));
+          return axios.post("/api/user/follow/unfollow", {
+            recipientId: user?.id,
+          });
         }
       } else {
-        // Organization İçin takip ve takipten çıkma
-        axios
-            .post("/api/organization/follow", {
-              recipientId: user?.id,
-            })
-            .then(() => {
-              isFollowing
-                ? toast.success("Takipten çıkıldı")
-                : toast.success("Takip ediliyor");
-              router.refresh();
-            })
-            .finally(() => setIsLoading(false));
+        return axios.post("/api/organization/follow", {
+          recipientId: user?.id,
+        });
       }
-    } catch (error: any) {
-      console.error(error);
+    },
+    onMutate: async () => {
+      // Mutasyon başlamadan önce durumları güncelle
+      await queryClient.cancelQueries({ queryKey: ["checkFollow", user?.id] });
+      await queryClient.cancelQueries({
+        queryKey: ["checkFriendRequest", user?.id],
+      });
+
+      const previousFollowStatus = queryClient.getQueryData([
+        "checkFollow",
+        user?.id,
+      ]);
+      const previousRequestStatus = queryClient.getQueryData([
+        "checkFriendRequest",
+        user?.id,
+      ]);
+
+      // Takip durumu tersine çevrildi (sadece isOrganization için)
+      if (isOrganization) {
+        setIsFollowing((prev) => !prev); // Takip durumunu tersine çevir
+      } else {
+        setIsRequestSent((prev) => !prev); // İstek durumunu tersine çevir
+      }
+
+      return { previousFollowStatus, previousRequestStatus }; // Geri döndür
+    },
+    onError: (error, _, context) => {
+      console.error("Takip işlemi sırasında hata oluştu:", error);
+      if (context?.previousFollowStatus) {
+        queryClient.setQueryData(
+          ["checkFollow", user?.id],
+          context.previousFollowStatus
+        );
+      }
+      if (context?.previousRequestStatus) {
+        queryClient.setQueryData(
+          ["checkFriendRequest", user?.id],
+          context.previousRequestStatus
+        );
+      }
+    },
+    onSuccess: () => {
+      // Invalidate queries to refetch data after mutation success
+      if (user?.id !== undefined) {
+        queryClient.invalidateQueries({ queryKey: ["user", identifier] });
+        queryClient.invalidateQueries({ queryKey: ["checkFollow", user?.id] }); // Invalidate follow query
+        queryClient.invalidateQueries({
+          queryKey: ["checkFriendRequest", user?.id],
+        });
+        queryClient.invalidateQueries({ queryKey: ["organization", identifier] });
+      }
     }
+  });
+
+  const handleFollow = () => {
+    followMutation.mutate();
   };
+
+  const isLoading = requestLoading || followLoading;
+
+  if (!user) {
+    return <ProfileDetailsSkeleton />
+  }
+
   return (
     <div className="flex items-center justify-between pt-4 md:px-0 px-2">
-      <ProfilePictureModal isOpen={isModalOpen} onClose={handleCloseModal} isOrganization={isOrganization} user={user}/>
+      <ProfilePictureModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        isOrganization={isOrganization}
+        user={user}
+      />
       <div className="flex items-center gap-4">
         <div
           className={cn(
@@ -134,14 +225,17 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
               : user?.id == currentUser?.id && "hover:opacity-80"
           )}
         >
-          {currentUser?.id && user?.id && (user.id === currentUser.id || (user as Organization)?.ownerId === currentUser.id)  && (
-            <span
-              onClick={handleOpenModal}
-              className="absolute bottom-4 right-4 bg-slate-100 p-1 rounded-lg hidden group-hover:block transition-all cursor-pointer hover:bg-slate-300"
-            >
-              <Camera className="text-muted-foreground w-5 h-5" />
-            </span>
-          )}
+          {currentUser?.id &&
+            user?.id &&
+            (user.id === currentUser.id ||
+              (user as Organization)?.ownerId === currentUser.id) && (
+              <span
+                onClick={handleOpenModal}
+                className="absolute bottom-4 right-4 bg-slate-100 p-1 rounded-lg hidden group-hover:block transition-all cursor-pointer hover:bg-slate-300"
+              >
+                <Camera className="text-muted-foreground w-5 h-5" />
+              </span>
+            )}
           <Image
             src={
               isOrganization
@@ -224,35 +318,33 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         )}
 
         {!isOrganization ? (
-          <>
-            {user?.id !== currentUser?.id && (
-              <Button
-                className="gap-2"
-                type="button"
-                onClick={handleFollow}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Icons.spinner className="md:h-5 md:w-5 h-4 w-4 animate-spin" />
-                ) : isRequestSent || isFollowing ? (
-                  <UserCheck className="md:h-5 md:w-5 h-4 w-4" />
-                ) : (
-                  <UserPlus className="md:h-5 md:w-5 h-4 w-4" />
-                )}
-                {isFollowing ? (
-                  <span>Takip ediliyor</span>
-                ) : (
-                  <>
-                    {isRequestSent ? (
-                      <span>İstek Gönderildi</span>
-                    ) : (
-                      <span>Takip Et</span>
-                    )}
-                  </>
-                )}
-              </Button>
-            )}
-          </>
+          user?.id !== currentUser?.id && (
+            <Button
+              className="gap-2"
+              type="button"
+              onClick={handleFollow}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Icons.spinner className="md:h-5 md:w-5 h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {isRequestSent || isFollowing ? (
+                    <UserCheck className="md:h-5 md:w-5 h-4 w-4" />
+                  ) : (
+                    <UserPlus className="md:h-5 md:w-5 h-4 w-4" />
+                  )}
+                  {isFollowing ? (
+                    <span>Takip ediliyor</span>
+                  ) : (
+                    <span>
+                      {isRequestSent ? "İstek Gönderildi" : "Takip Et"}
+                    </span>
+                  )}
+                </>
+              )}
+            </Button>
+          )
         ) : (
           <Button
             className="gap-2"
@@ -262,12 +354,16 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
           >
             {isLoading ? (
               <Icons.spinner className="md:h-5 md:w-5 h-4 w-4 animate-spin" />
-            ) : isFollowing ? (
-              <UserCheck className="md:h-5 md:w-5 h-4 w-4" />
             ) : (
-              <UserPlus className="md:h-5 md:w-5 h-4 w-4" />
+              <>
+                {isFollowing ? (
+                  <UserCheck className="md:h-5 md:w-5 h-4 w-4" />
+                ) : (
+                  <UserPlus className="md:h-5 md:w-5 h-4 w-4" />
+                )}
+                <span>{isFollowing ? "Takip ediliyor" : "Takip Et"}</span>
+              </>
             )}
-            {isFollowing ? <span>Takip ediliyor</span> : <span>Takip Et</span>}
           </Button>
         )}
       </div>

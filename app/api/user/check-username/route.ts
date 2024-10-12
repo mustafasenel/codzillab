@@ -24,12 +24,19 @@ export async function GET(req: Request) {
 
   try {
     let existingUser;
+    let existingOrganization;
 
+    // Kullanıcı adı kontrolü
     if (currentUser?.username !== username) {
       existingUser = await prisma.user.findFirst({
         where: { username: username },
       });
     }
+
+    // Organizasyon slug kontrolü
+    existingOrganization = await prisma.organization.findFirst({
+      where: { slug: username }, // Slug kontrolü için aynı username kullanıldı
+    });
 
     if (existingUser) {
       return NextResponse.json(
@@ -38,9 +45,16 @@ export async function GET(req: Request) {
       );
     }
 
+    if (existingOrganization) {
+      return NextResponse.json(
+        { isAvailable: false, message: "Organization slug is already taken" },
+        { status: 200 }
+      );
+    }
+
     return NextResponse.json({ isAvailable: true }, { status: 200 });
   } catch (error) {
-    console.error("Error checking username:", error);
+    console.error("Error checking username or organization slug:", error);
     return new NextResponse("Something went wrong", { status: 500 });
   }
 }

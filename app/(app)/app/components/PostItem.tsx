@@ -30,9 +30,10 @@ import React, { useEffect, useState } from "react";
 interface PostItemProps {
   post: FullPostType;
   currentUser: User;
+  ref: any
 }
 
-const PostItem: React.FC<PostItemProps> = ({ post, currentUser }) => {
+const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const [displayDate, setDisplayDate] = useState<string>("");
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
   useEffect(() => {
@@ -58,7 +59,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser }) => {
 
   return (
     <Card>
-      <div className="flex items-center justify-between p-4">
+      <div className="flex items-center justify-between p-4" ref={ref}>
         <Link
           href={
             post.user
@@ -81,8 +82,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser }) => {
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <div className="flex flex-col justify-between py-1">
-            <div className="flex gap-2">
-              <span className="text-sm font-semibold flex">
+            <div className="flex gap-2 items-center">
+              <span className="text-sm font-semibold flex items-center">
                 {post.user
                   ? `${post.user.name} ${post.user.surname}`
                   : post?.organization?.name}

@@ -6,13 +6,12 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { FullOrganizationType } from '@/types'
 import { User } from '@prisma/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { UserCheck, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
-import toast from 'react-hot-toast';
 
 interface OrganizationCardProps {
     organization: FullOrganizationType;
@@ -23,46 +22,74 @@ const OrganizationCard:React.FC<OrganizationCardProps> = ({ organization, curren
     const [isLoading, setIsLoading] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
   
-    const router = useRouter()
+    const queryClient = useQueryClient();
+
+    // Fetch the follow status
+    const {
+      data: followStatus,
+      isLoading: followLoading,
+      error: followError,
+    } = useQuery({
+      queryKey: ["checkFollowOrg", organization?.id],
+      queryFn: async () => {
+        const response = await axios.post("/api/organization/follow/check-follow", {
+          recipientId: organization?.id,
+        });
+        return response.data;
+      },
+      enabled: !!organization?.id && !!currentUser, // Only fetch when user.id and currentUser are available
+    });
   
+
     useEffect(() => {
-      const checkFollow = async () => {
-        if (currentUser) {
-          try {
-            const response = await axios.post("/api/organization/follow/check-follow", {
-              recipientId: organization.id,
-            });
+      if (followStatus) {
+        setIsFollowing(followStatus.hasRequest);
+      }
+    }, [followStatus, organization]);
   
-            setIsFollowing(response.data.hasRequest);
-          } catch (error: any) {
-            console.error("İstek kontrol edilemedi:", error);
-          }
+    // Mutation for following/unfollowing a user or organization
+    const followMutation = useMutation({
+      mutationKey: ["followOrg", organization?.id], // Using mutationKey for tracking
+      mutationFn: async () => {
+          return axios.post("/api/organization/follow", {
+            recipientId: organization?.id,
+          });
+      },
+      onMutate: async () => {
+        // Mutasyon başlamadan önce durumları güncelle
+        await queryClient.cancelQueries({ queryKey: ["checkFollowOrg", organization?.id] });
+
+        const previousFollowStatus = queryClient.getQueryData([
+          "checkFollowOrg",
+          organization?.id,
+        ]);
+
+        setIsFollowing((prev) => !prev); // Takip durumunu tersine çevir
+
+        return { previousFollowStatus }; // Geri döndür
+      },
+      onError: (error, _, context) => {
+        console.error("Takip işlemi sırasında hata oluştu:", error);
+        if (context?.previousFollowStatus) {
+          queryClient.setQueryData(
+            ["checkFollowOrg", organization?.id],
+            context.previousFollowStatus
+          );
         }
-      };
-  
-      checkFollow();
-    }, [currentUser, organization]);
+
+      },
+      onSuccess: () => {
+        // Invalidate queries to refetch data after mutation success
+        if (organization?.id !== undefined) {
+          queryClient.invalidateQueries({ queryKey: ["checkFollow", organization?.id] }); // Invalidate follow query
+        }
+      }
+    });
   
     const handleFollow = () => {
-      setIsLoading(true);
-      try {
-          // Organization İçin takip ve takipten çıkma
-          axios
-              .post("/api/organization/follow", {
-                recipientId: organization.id,
-              })
-              .then(() => {
-                isFollowing
-                  ? toast.success("Takipten çıkıldı")
-                  : toast.success("Takip ediliyor");
-                router.refresh();
-              })
-              .finally(() => setIsLoading(false));
-        
-      } catch (error: any) {
-        console.error(error);
-      }
+      followMutation.mutate();
     };
+
   return (
     <Card className="p-0 flex flex-col">
     <div

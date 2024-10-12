@@ -1,8 +1,8 @@
 "use client";
 
 import { FullPostType, FullUserType } from "@/types";
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useRef, useCallback } from "react";
+import { useInfiniteQuery, QueryFunctionContext } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import PostItem from "./PostItem";
 import PostSkeleton from "./PostSkeletton";
@@ -12,28 +12,75 @@ interface TimelineProps {
 }
 
 const Timeline: React.FC<TimelineProps> = ({ user }) => {
-  const { data, error, isLoading } = useQuery<FullPostType[]>({
+  const fetchPosts = async ({ pageParam = 0 }: QueryFunctionContext): Promise<FullPostType[]> => {
+    const take = 10; // Her istekte kaç post getirileceği
+    const response = await fetch(`/api/post/getPosts/feed?skip=${pageParam}&take=${take}`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+
+    // API yanıtını kontrol et
+    if (!Array.isArray(data.posts)) {
+      console.error("Posts is not an array:", data.posts);
+      return []; // Boş bir dizi döndür
+    }
+
+    return data.posts; // Dizi olarak döndür
+  };
+
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery<FullPostType[], Error>({
     queryKey: ["posts"],
-    queryFn: async () => {
-      const response = await fetch("/api/post/getPosts/feed");
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
+    queryFn: fetchPosts,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === 10 ? allPages.length * 10 : undefined; // Eğer son sayfa 10 post içeriyorsa, bir sonraki sayfa parametresi döndür
     },
+    initialPageParam: 0,
   });
 
-  // Hata kontrolü
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const lastPostRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return;
+
+      if (observerRef.current) observerRef.current.disconnect();
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        const firstEntry = entries[0];
+
+        if (firstEntry.isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+
+      if (node) observerRef.current.observe(node);
+
+      return () => {
+        if (observerRef.current) observerRef.current.disconnect();
+      };
+    },
+    [isLoading, isFetchingNextPage, fetchNextPage, hasNextPage]
+  );
+
+  if (isLoading) {
+    return <PostSkeleton />;
+  }
+
   if (error) {
     console.error("Error fetching posts:", error);
     return <div>An error occurred: {error.message}</div>;
   }
 
-  if (isLoading) {
-      return <PostSkeleton />
-  }
-
-  if (!data) {
+  if (!data?.pages.length) {
     return (
       <div>
         <Card className="w-full h-40 flex items-center justify-center">
@@ -42,11 +89,22 @@ const Timeline: React.FC<TimelineProps> = ({ user }) => {
       </div>
     );
   }
+
   return (
     <div className="w-full flex flex-col space-y-4">
-      {data.map((post, index) => (
-          <PostItem key={index} post={post} currentUser={user}/>
+      {data.pages.map((page, pageIndex) => (
+        <React.Fragment key={pageIndex}>
+          {page.map((post, postIndex) => (
+            <PostItem
+              key={post.id}
+              post={post}
+              currentUser={user}
+              ref={pageIndex === data.pages.length - 1 && postIndex === page.length - 1 ? lastPostRef : undefined} // Son post'a referans ver
+            />
+          ))}
+        </React.Fragment>
       ))}
+      {isFetchingNextPage && <PostSkeleton />} {/* Yeni sayfa yüklenirken skeleton göster */}
     </div>
   );
 };

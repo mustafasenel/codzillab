@@ -112,7 +112,7 @@ export default async function ProfilePageLayout({
       <div className="md:container mx-auto">
         <div className="w-full flex-col py-2 md:px-0 px-2">
           <Cover user={profileUser} currentUser={currentUser} />
-          <ProfileDetails user={profileUser} currentUser={currentUser} />
+          <ProfileDetails user={profileUser} currentUser={currentUser} identifier={params.identifier}/>
           <div className="flex gap-4 pt-4">
             <MenuNav items={sidebarNavItems} />
           </div>
