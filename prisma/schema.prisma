@@ -240,9 +240,12 @@ model Post {
   isPromoted    Boolean       @default(false)
   location      String?
   eventDate     DateTime?
-  viewCount     Int           @default(0)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  viewsCount    Int @default(0)
+  likesCount    Int @default(0)
+  CommentsCount Int @default(0)
 
   userId String? @db.ObjectId
   user   User?   @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)

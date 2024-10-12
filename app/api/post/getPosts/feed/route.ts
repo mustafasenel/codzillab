@@ -29,6 +29,7 @@ export async function GET(request: Request) {
                 attachments: true,
                 user: true,
                 organization: true,
+                likes:true
             },
             skip: pageParam, // Sayfalama
             take, // Alınacak post sayısı

@@ -151,6 +151,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
   const onSubmit = (data: PostFormValues) => {
     mutation.mutate(data);
     setIsLoading(true);
+    setOpenImageUpload(false)
   };
 
 

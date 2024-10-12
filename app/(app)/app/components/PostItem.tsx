@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { FullPostType } from "@/types";
 import { User } from "@prisma/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import {
   format,
   formatDistanceToNow,
@@ -19,9 +21,12 @@ import {
   ChevronDown,
   Forward,
   Ghost,
+  Heart,
+  Medal,
   MessageSquareText,
   Send,
   ThumbsUp,
+  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,12 +35,27 @@ import React, { useEffect, useState } from "react";
 interface PostItemProps {
   post: FullPostType;
   currentUser: User;
-  ref: any
+  ref: any;
 }
 
 const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const [displayDate, setDisplayDate] = useState<string>("");
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
+
+
+  const [likeCount, setLikeCount] = useState<number>(post.likesCount);
+  const queryClient = useQueryClient();
+
+  const [isLiked, setIsLiked] = useState(false);
+
+  useEffect(() => {
+    const isLikedByUser = post.likes && Array.isArray(post.likes)
+      ? post.likes.some((like) => like.userId === currentUser.id)
+      : false;
+    setIsLiked(isLikedByUser);
+  }, [post.id, currentUser.id]); 
+  
+
   useEffect(() => {
     const oneWeekAgo = subWeeks(new Date(), 1);
     const isRecent = isWithinInterval(post.createdAt, {
@@ -57,8 +77,56 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
     );
   }, [post.createdAt]);
 
+  // Like fonksiyonu için useMutation
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(`/api/post/like`, { postId: post.id });
+      return response.data; // Gerekirse yanıtı döndürün
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['posts', post.id] });
+    
+      const prevPostData = queryClient.getQueryData(['posts', post.id]) as { likesCount?: number };
+      const prevLikeCount = prevPostData?.likesCount || 0;
+    
+      // Kullanıcı beğeni ekliyorsa
+      if (!isLiked) {
+        setLikeCount(prevLikeCount + 1); // Beğeni eklendiğinde artır
+      } else {
+        setLikeCount(prevLikeCount); // Beğeni kaldırıldığında azalt
+      }
+    
+      setIsLiked(!isLiked); // Durumu değiştir
+    
+      return { prevLikeCount }; // Önceki durumu döndür
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts', post.id] });
+    },
+    onError: (error, variables, context) => {
+      if (context) {
+        setLikeCount(context.prevLikeCount);
+      }
+      console.error("Beğeni eklenirken hata:", error);
+    },
+  });
+  
+  
+  
+
+  const handleLikeClick = () => {
+    likeMutation.mutate(); // Beğeni fonksiyonunu tetikle
+  };
   return (
-    <Card>
+    <Card className={cn(post.isPromoted && "border-[2px] border-[#FFA412]")}>
+      {post.isPromoted && (
+        <div className="h-8 p-0 bg-[#FFA412] rounded-t-md flex items-center ">
+          <div className="px-4 text-sm flex gap-3 items-center text-white font-semibold">
+            <Zap />
+            <p>Sponsorlu</p>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between p-4" ref={ref}>
         <Link
           href={
@@ -125,13 +193,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         </div>
         <div className="flex gap-4 items-center px-6">
           <div className="flex items-center gap-2">
-            <button type="button">
-              <ThumbsUp className="h-5 w-5" />
+            <button type="button" onClick={handleLikeClick}>
+              <Heart className={cn("h-5 w-5", isLiked && "fill-rose-500 stroke-rose-500")} />
             </button>
-            <p className="text-sm text-muted-foreground">1B</p>
+            <p className="text-sm text-muted-foreground">{likeCount}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)}>
+            <button
+              type="button"
+              onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)}
+            >
               <MessageSquareText className="h-5 w-5" />
             </button>
             <p className="text-sm text-muted-foreground">23</p>
@@ -142,7 +213,9 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
             </button>
           </div>
         </div>
-        <div className={cn("gap-4 px-4",isCommentSectionOpen ? "flex" : "hidden")}>
+        <div
+          className={cn("gap-4 px-4", isCommentSectionOpen ? "flex" : "hidden")}
+        >
           <Link
             href={
               post.user

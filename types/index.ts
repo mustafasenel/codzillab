@@ -4,6 +4,7 @@ import {
   FriendRequest,
   Game,
   GameBody,
+  Like,
   Media,
   Organization,
   OrganizationFollower,
@@ -45,5 +46,6 @@ export type FullOrganizationType = Organization & {
 export type FullPostType = Post & {
   user?: User;
   organization?: Organization
-  attachments?: Media[]
+  attachments?: Media[];
+  likes?:Like[]
 }
