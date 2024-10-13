@@ -299,7 +299,7 @@ model Like {
   commentId String? @db.ObjectId
 
   user    User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
-  post    Post?    @relation("PostLikes", fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation("PostLikes", fields: [postId], references: [id], onDelete: Cascade)
   comment Comment? @relation("CommentLikes", fields: [commentId], references: [id], onDelete: Cascade) // Yorum ile ilişki
 }
 

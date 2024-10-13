@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         data: {
           userId: currentUser.id,
           postId: postId,
-        },
+        }
       });
 
       // Postun beğeni sayısını artır

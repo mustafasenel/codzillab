@@ -31,6 +31,9 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import PostComment from "./PostComment";
+import PostCommentList from "./PostCommentList";
+import { FaRegThumbsUp, FaThumbsUp } from "react-icons/fa";
 
 interface PostItemProps {
   post: FullPostType;
@@ -49,11 +52,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
-    const isLikedByUser = post.likes && Array.isArray(post.likes)
-      ? post.likes.some((like) => like.userId === currentUser.id)
-      : false;
-    setIsLiked(isLikedByUser);
-  }, [post.id, currentUser.id]); 
+    if (post.likes && Array.isArray(post.likes)) {
+      const isLikedByUser = post.likes.some((like) => like.userId === currentUser.id);
+      setIsLiked(isLikedByUser);
+    } else {
+      setIsLiked(false);
+    }
+    
+  }, [post.likes, currentUser.id, post.id]);
   
 
   useEffect(() => {
@@ -80,36 +86,45 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   // Like fonksiyonu için useMutation
   const likeMutation = useMutation({
     mutationFn: async () => {
-      const response = await axios.post(`/api/post/like`, { postId: post.id });
-      return response.data; // Gerekirse yanıtı döndürün
+        const response = await axios.post(`/api/post/like`, { postId: post.id });
+        return response.data; 
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ['posts', post.id] });
-    
-      const prevPostData = queryClient.getQueryData(['posts', post.id]) as { likesCount?: number };
-      const prevLikeCount = prevPostData?.likesCount || 0;
-    
-      // Kullanıcı beğeni ekliyorsa
-      if (!isLiked) {
-        setLikeCount(prevLikeCount + 1); // Beğeni eklendiğinde artır
-      } else {
-        setLikeCount(prevLikeCount); // Beğeni kaldırıldığında azalt
-      }
-    
-      setIsLiked(!isLiked); // Durumu değiştir
-    
-      return { prevLikeCount }; // Önceki durumu döndür
+        await queryClient.cancelQueries({ queryKey: ['posts'] }); // Tüm postlar için sorguları durdur
+
+        // pages dizisini düz bir dizi haline getir
+        const prevPostsData = queryClient.getQueryData(['posts']) as { pages: FullPostType[][] };
+        const allPosts = prevPostsData?.pages.flat() || []; // Düzleştirilmiş post dizisi
+
+        const prevPostData = allPosts.find(p => p.id === post.id); // ID ile postu bul
+
+        if (!prevPostData) {
+            console.warn('Önceki veri bulunamadı, beğeni sayısı güncellenemedi');
+            return; 
+        }
+
+        const prevLikeCount = prevPostData.likesCount; 
+
+        // Beğeni durumu değişikliği
+        setLikeCount(isLiked ? prevLikeCount - 1 : prevLikeCount + 1); 
+        setIsLiked(!isLiked); 
+
+        return { prevLikeCount }; 
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts', post.id] });
+        // Başarılı olduğunda ilgili postun sorgusunu yenile
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
     onError: (error, variables, context) => {
-      if (context) {
-        setLikeCount(context.prevLikeCount);
-      }
-      console.error("Beğeni eklenirken hata:", error);
+        if (context) {
+            setLikeCount(context.prevLikeCount);
+        }
+        console.error("Beğeni eklenirken hata:", error); 
     },
-  });
+});
+
+
+  
   
   
   
@@ -194,7 +209,15 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         <div className="flex gap-4 items-center px-6">
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleLikeClick}>
-              <Heart className={cn("h-5 w-5", isLiked && "fill-rose-500 stroke-rose-500")} />
+              {
+                isLiked ? (
+
+                  <FaThumbsUp className={cn("h-5 w-5")} />
+                ):(
+                  <FaRegThumbsUp className={cn("h-5 w-5")} />
+
+                )
+              }
             </button>
             <p className="text-sm text-muted-foreground">{likeCount}</p>
           </div>
@@ -209,36 +232,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
           </div>
           <div className="flex items-center gap-2">
             <button type="button">
-              <Forward className="h-5 w-5" />
+              <Send className="h-5 w-5" />
             </button>
           </div>
         </div>
         <div
-          className={cn("gap-4 px-4", isCommentSectionOpen ? "flex" : "hidden")}
+          className={cn(isCommentSectionOpen ? "flex-col space-y-4 pt-4" : "hidden")}
         >
-          <Link
-            href={
-              post.user
-                ? `/${post.user.username}`
-                : `/${post?.organization?.slug}`
-            }
-            className="flex items-center space-x-4"
-          >
-            <Avatar>
-              <AvatarImage
-                src={
-                  currentUser?.image ||
-                  "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/271deea8-e28c-41a3-aaf5-2913f5f48be6/de7834s-6515bd40-8b2c-4dc6-a843-5ac1a95a8b55.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzI3MWRlZWE4LWUyOGMtNDFhMy1hYWY1LTI5MTNmNWY0OGJlNlwvZGU3ODM0cy02NTE1YmQ0MC04YjJjLTRkYzYtYTg0My01YWMxYTk1YThiNTUuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.BopkDn1ptIwbmcKHdAOlYHyAOOACXW0Zfgbs0-6BY-E"
-                }
-              />
+          <PostCommentList postId={post.id} currentUser={currentUser}/>
+          <PostComment post={post} currentUser={currentUser} />
 
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-          </Link>
-          <Input placeholder="Yorum yapın" />
-          <Button>
-            <Send className="h-5 w-5" />
-          </Button>
         </div>
       </CardContent>
     </Card>

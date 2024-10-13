@@ -1,5 +1,6 @@
 import {
   Account,
+  Comment,
   Follower,
   FriendRequest,
   Game,
@@ -43,9 +44,18 @@ export type FullOrganizationType = Organization & {
   followers?: OrganizationFollower[];
 }
 
+export type FullLikeType = Like & {
+  user?: User
+}
+
 export type FullPostType = Post & {
   user?: User;
   organization?: Organization
   attachments?: Media[];
-  likes?:Like[]
+  likes?:FullLikeType[]
+}
+
+export type FullCommentType = Comment & {
+  user?: User;
+  likes?:FullLikeType[]
 }
