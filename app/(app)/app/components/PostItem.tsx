@@ -19,13 +19,20 @@ import { tr } from "date-fns/locale";
 import {
   ArrowDown,
   ChevronDown,
+  ChevronDownIcon,
   Forward,
   Ghost,
   Heart,
   Medal,
   MessageSquareText,
+  Pen,
+  Pin,
   Send,
   ThumbsUp,
+  Trash2,
+  TriangleAlert,
+  TriangleAlertIcon,
+  UserIcon,
   Zap,
 } from "lucide-react";
 import Image from "next/image";
@@ -34,6 +41,15 @@ import React, { useEffect, useState } from "react";
 import PostComment from "./PostComment";
 import PostCommentList from "./PostCommentList";
 import { FaRegThumbsUp, FaThumbsUp } from "react-icons/fa";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getInitials } from '@/utils/getInitials'; // Fonksiyonu uygun yoldan import edin
 
 interface PostItemProps {
   post: FullPostType;
@@ -45,7 +61,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const [displayDate, setDisplayDate] = useState<string>("");
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
 
-
   const [likeCount, setLikeCount] = useState<number>(post.likesCount);
   const queryClient = useQueryClient();
 
@@ -53,14 +68,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
 
   useEffect(() => {
     if (post.likes && Array.isArray(post.likes)) {
-      const isLikedByUser = post.likes.some((like) => like.userId === currentUser.id);
+      const isLikedByUser = post.likes.some(
+        (like) => like.userId === currentUser.id
+      );
       setIsLiked(isLikedByUser);
     } else {
       setIsLiked(false);
     }
-    
   }, [post.likes, currentUser.id, post.id]);
-  
 
   useEffect(() => {
     const oneWeekAgo = subWeeks(new Date(), 1);
@@ -86,52 +101,95 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   // Like fonksiyonu için useMutation
   const likeMutation = useMutation({
     mutationFn: async () => {
-        const response = await axios.post(`/api/post/like`, { postId: post.id });
-        return response.data; 
+      const response = await axios.post(`/api/post/like`, { postId: post.id });
+      return response.data;
     },
     onMutate: async () => {
-        await queryClient.cancelQueries({ queryKey: ['posts'] }); // Tüm postlar için sorguları durdur
+      await queryClient.cancelQueries({ queryKey: ["posts"] }); // Tüm postlar için sorguları durdur
 
-        // pages dizisini düz bir dizi haline getir
-        const prevPostsData = queryClient.getQueryData(['posts']) as { pages: FullPostType[][] };
-        const allPosts = prevPostsData?.pages.flat() || []; // Düzleştirilmiş post dizisi
+      // pages dizisini düz bir dizi haline getir
+      const prevPostsData = queryClient.getQueryData(["posts"]) as {
+        pages: FullPostType[][];
+      };
+      const allPosts = prevPostsData?.pages.flat() || []; // Düzleştirilmiş post dizisi
 
-        const prevPostData = allPosts.find(p => p.id === post.id); // ID ile postu bul
+      const prevPostData = allPosts.find((p) => p.id === post.id); // ID ile postu bul
 
-        if (!prevPostData) {
-            console.warn('Önceki veri bulunamadı, beğeni sayısı güncellenemedi');
-            return; 
-        }
+      if (!prevPostData) {
+        console.warn("Önceki veri bulunamadı, beğeni sayısı güncellenemedi");
+        return;
+      }
 
-        const prevLikeCount = prevPostData.likesCount; 
+      const prevLikeCount = prevPostData.likesCount;
 
-        // Beğeni durumu değişikliği
-        setLikeCount(isLiked ? prevLikeCount - 1 : prevLikeCount + 1); 
-        setIsLiked(!isLiked); 
+      // Beğeni durumu değişikliği
+      setLikeCount(isLiked ? prevLikeCount - 1 : prevLikeCount + 1);
+      setIsLiked(!isLiked);
 
-        return { prevLikeCount }; 
+      return { prevLikeCount };
     },
     onSuccess: () => {
-        // Başarılı olduğunda ilgili postun sorgusunu yenile
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
+      // Başarılı olduğunda ilgili postun sorgusunu yenile
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (error, variables, context) => {
-        if (context) {
-            setLikeCount(context.prevLikeCount);
-        }
-        console.error("Beğeni eklenirken hata:", error); 
+      if (context) {
+        setLikeCount(context.prevLikeCount);
+      }
+      console.error("Beğeni eklenirken hata:", error);
     },
-});
-
-
-  
-  
-  
-  
+  });
 
   const handleLikeClick = () => {
     likeMutation.mutate(); // Beğeni fonksiyonunu tetikle
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+        const response = await axios.post(`/api/post/delete`, { postId: post.id });
+        return response.data;
+    },
+    onMutate: async () => { 
+        await queryClient.cancelQueries({ queryKey: ["posts"] }); 
+        
+        const prevPostsData = queryClient.getQueryData<{ pages: FullPostType[][] }>(["posts"]);
+
+        if (!prevPostsData) {
+            return; 
+        }
+
+        // Silinecek postu filtrele
+        const newPagesData = prevPostsData.pages.map(page => 
+            page.filter(postItem => postItem.id !== post.id)
+        );
+
+        // Yeni veriyi ayarla, yapıyı koruyarak
+        queryClient.setQueryData(["posts"], { 
+            ...prevPostsData, // Önceki verinin diğer alanlarını kopyala
+            pages: newPagesData // Sadece pages alanını güncelle
+        });
+
+        return { prevPostsData }; 
+    },
+    onError: (error, variables, context) => {
+        if (context?.prevPostsData) {
+            queryClient.setQueryData(["posts"], context.prevPostsData);
+        }
+        console.error("Post silinirken hata:", error);
+    }, 
+    onSuccess: () => { 
+        queryClient.invalidateQueries({ queryKey: ["posts"] }); 
+    }, 
+});
+
+
+
+
+
+const handleDeletePost = () => {
+    deleteMutation.mutate(); // Post silme fonksiyonunu tetikle
+};
+
   return (
     <Card className={cn(post.isPromoted && "border-[2px] border-[#FFA412]")}>
       {post.isPromoted && (
@@ -162,7 +220,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
               width={15}
             />
 
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback>{getInitials(post.user?.name || post.organization?.name)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col justify-between py-1">
             <div className="flex gap-2 items-center">
@@ -180,7 +238,52 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
             )}
           </div>
         </Link>
-        <ChevronDown />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost">
+              <ChevronDownIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end">
+            {post.user?.id === currentUser.id ? (
+              <>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                    <Pen className="h-4 w-4" />
+                    <span>Postu Düzenle</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={handleDeletePost}>
+                    <Trash2 className="h-4 w-4" />
+                    <span>Postu Sil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                    <MessageSquareText className="h-4 w-4" />
+                    <span>Yorumları Kapat</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                    <Pin className="h-4 w-4" />
+                    <span>Postu Sabitle</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                    <Zap className="h-4 w-4" />
+                    <span>Postu Öne Çıkar</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            ) : (
+              <DropdownMenuGroup>
+                <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <TriangleAlertIcon className="h-4 w-4"/>
+                  <span>Postu bildir</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <CardContent className="flex flex-col space-y-4 p-0 pb-4">
         <p className="px-4 text-sm">{post.content}</p>
@@ -209,15 +312,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         <div className="flex gap-4 items-center px-6">
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleLikeClick}>
-              {
-                isLiked ? (
-
-                  <FaThumbsUp className={cn("h-5 w-5")} />
-                ):(
-                  <FaRegThumbsUp className={cn("h-5 w-5")} />
-
-                )
-              }
+              {isLiked ? (
+                <FaThumbsUp className={cn("h-5 w-5")} />
+              ) : (
+                <FaRegThumbsUp className={cn("h-5 w-5")} />
+              )}
             </button>
             <p className="text-sm text-muted-foreground">{likeCount}</p>
           </div>
@@ -228,7 +327,9 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
             >
               <MessageSquareText className="h-5 w-5" />
             </button>
-            <p className="text-sm text-muted-foreground">23</p>
+            <p className="text-sm text-muted-foreground">
+              {post.CommentsCount}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button type="button">
@@ -237,11 +338,12 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
           </div>
         </div>
         <div
-          className={cn(isCommentSectionOpen ? "flex-col space-y-4 pt-4" : "hidden")}
+          className={cn(
+            isCommentSectionOpen ? "flex-col space-y-4 pt-4" : "hidden"
+          )}
         >
-          <PostCommentList postId={post.id} currentUser={currentUser}/>
+          <PostCommentList postId={post.id} postUserId={post.userId!} currentUser={currentUser} />
           <PostComment post={post} currentUser={currentUser} />
-
         </div>
       </CardContent>
     </Card>

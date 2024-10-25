@@ -30,7 +30,7 @@ export default async function TimelineLayout({
 
   const sidebarNavItems = [
     {
-      title: "Zaman Akışı",
+      title: "Ana Sayfa",
       href: `/app`,
       icon: <Home className="h-6 w-6" />,
     },

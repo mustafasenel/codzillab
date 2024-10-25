@@ -24,6 +24,17 @@ export async function POST(request: Request) {
             },
         });
 
+        await prisma.post.update({
+            where: { 
+                id: postId 
+            },
+            data: {
+                CommentsCount: {
+                    increment: 1 
+                }
+            }
+        })
+
         return new NextResponse(JSON.stringify(newComment), { status: 201 });
 
     } catch (error: any) {

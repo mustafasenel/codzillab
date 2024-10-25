@@ -2,7 +2,7 @@ import getCurrentUser from "@/actions/getCurrentUser";
 
 import MainComp from "./components/MainComp";
 import getOrganizationsByUserById from "@/actions/getOrganizationsByUserId";
-import getPosts from "@/actions/getPosts";
+
 
 const App = async () => {
   const currentUser = await getCurrentUser();
@@ -13,6 +13,7 @@ const App = async () => {
   }
   return (
     <div>
+          
       <MainComp user={currentUser!} organizations={organizations}/>
     </div>
   );

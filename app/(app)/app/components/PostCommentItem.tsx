@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { FullCommentType } from "@/types";
 import { User } from "@prisma/client";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronDownIcon, Pen, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,15 +14,27 @@ import {
   subWeeks,
 } from "date-fns";
 import { tr } from "date-fns/locale";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PostCommentItemProps {
   comment: FullCommentType;
   currentUser: User;
+  postUserId: string;
+  onDelete: (commentId: string) => void; 
 }
 
 const PostCommentItem: React.FC<PostCommentItemProps> = ({
   comment,
   currentUser,
+  postUserId,
+  onDelete,
 }) => {
   const [displayDate, setDisplayDate] = useState<string>("");
 
@@ -84,13 +96,41 @@ const PostCommentItem: React.FC<PostCommentItemProps> = ({
             )}
           </div>
         </Link>
-        <Button variant="ghost">
-          <ChevronDown className="w-4 h-4" />
-        </Button>
+        {(comment.user?.id === currentUser.id ||
+          postUserId === currentUser.id) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+            <Button variant="ghost">
+              <ChevronDownIcon className="w-4 h-4"/>
+            </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              {comment.user?.id === currentUser.id ? (
+                // Yorum sahibi: Düzenle ve Sil seçenekleri
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                    <Pen className="h-4 w-4" />
+                    <span>Yorumu Düzenle</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => onDelete(comment.id)}>
+                    <Trash2 className="h-4 w-4" />
+                    <span>Yorumu Sil</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              ) : (
+                // Yalnızca gönderi sahibi: Sil seçeneği
+                <DropdownMenuGroup>
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={() => onDelete(comment.id)}>
+                    <Trash2 className="h-4 w-4" />
+                    <span>Yorumu Sil</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
-      <p className="text-sm pl-[72px]">
-        {comment.content}
-      </p>
+      <p className="text-sm pl-[72px]">{comment.content}</p>
     </div>
   );
 };
