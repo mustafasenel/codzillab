@@ -16,9 +16,10 @@ import React, { useEffect, useState } from 'react'
 interface OrganizationCardProps {
     organization: FullOrganizationType;
     currentUser: User
+    ref: any
 }
 
-const OrganizationCard:React.FC<OrganizationCardProps> = ({ organization, currentUser }) => {
+const OrganizationCard:React.FC<OrganizationCardProps> = ({ organization, currentUser, ref }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
   
@@ -99,6 +100,7 @@ const OrganizationCard:React.FC<OrganizationCardProps> = ({ organization, curren
           ? `url(${organization.cover})`
           : `url("anasayfabg.png")`,
       }}
+      ref={ref}
     />
     <div className="flex items-center justify-center">
       <Image

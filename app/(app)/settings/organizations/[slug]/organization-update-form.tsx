@@ -146,6 +146,59 @@ export function OrganizationUpdateForm({
     }
   }
 
+  const username = watch("slug");
+  useEffect(() => {
+    if (username) {
+      const checkUsername = async () => {
+        try {
+          const response = await axios.get(
+            `/api/user/check-username?username=${username}&currentValue=${organization?.slug}`
+          );
+          if (!response.data.isAvailable) {
+            setError("slug", {
+              type: "manual",
+              message: "Url kullanılıyor",
+            });
+          } else {
+            clearErrors("slug");
+          }
+        } catch (error) {
+          toast.error("Error checking username availability");
+        }
+      };
+
+      // Bir debounce etkisi yaratmak için kullanıcı yazmayı bitirene kadar kısa bir bekleme süresi
+      const timeoutId = setTimeout(checkUsername, 500);
+      return () => clearTimeout(timeoutId); // Her kullanıcı girişi olduğunda önceki timeout'u iptal ediyoruz
+    }
+  }, [username, setError, clearErrors]);
+
+  const name = watch("name");
+  useEffect(() => {
+    if (name) {
+      const checkUsername = async () => {
+        try {
+          const response = await axios.get(
+            `/api/organization/check-name?username=${name}&currentValue=${organization?.name}`
+          );
+          if (!response.data.isAvailable) {
+            setError("name", {
+              type: "manual",
+              message: "İsim kullanılıyor",
+            });
+          } else {
+            clearErrors("name");
+          }
+        } catch (error) {
+          toast.error("Error checking username availability");
+        }
+      };
+
+      // Bir debounce etkisi yaratmak için kullanıcı yazmayı bitirene kadar kısa bir bekleme süresi
+      const timeoutId = setTimeout(checkUsername, 500);
+      return () => clearTimeout(timeoutId); // Her kullanıcı girişi olduğunda önceki timeout'u iptal ediyoruz
+    }
+  }, [name, setError, clearErrors]);
   const urls = [0, 1, 2, 3];
 
   return (

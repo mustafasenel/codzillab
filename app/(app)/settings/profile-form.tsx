@@ -127,7 +127,7 @@ export function ProfileForm({ user }: ProfileFormTypes) {
       const checkUsername = async () => {
         try {
           const response = await axios.get(
-            `/api/user/check-username?username=${username}`
+            `/api/user/check-username?username=${username}&currentValue=${user.username}`
           );
           if (!response.data.isAvailable) {
             setError("username", {

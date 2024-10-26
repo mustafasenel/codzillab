@@ -1,41 +1,33 @@
 "use client";
 
-import { FullOrganizationType } from "@/types";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { FullUserType } from "@/types";
 import { Card } from "@/components/ui/card";
-
-import { useRouter } from "next/navigation";
-import { User } from "@prisma/client";
-import OrganizationCard from "./OrganizationCard";
 import { QueryFunctionContext, useInfiniteQuery } from "@tanstack/react-query";
+import UserCard from "./UserCard";
+import { User } from "@prisma/client";
 import Search from "@/components/search";
-import UserCardSkeletton from "../../friends/components/UserCardSkeletton";
+import UserCardSkeletton from "./UserCardSkeletton";
 
-interface OrganizationsProps {
-  organizations?: FullOrganizationType[] | [];
+interface FriendsExploreProps {
   currentUser: User;
 }
 
-const OrganizationExplore: React.FC<OrganizationsProps> = ({
-  organizations,
-  currentUser,
-}) => {
-  const router = useRouter();
+const FriendsExplore: React.FC<FriendsExploreProps> = ({ currentUser }) => {
   const [searchTerm, setSearchTerm] = useState(""); // Arama terimi için state
   const [searchQuery, setSearchQuery] = useState(""); // Butonla yapılacak arama için state
 
   const fetchPosts = async ({
     pageParam = 0,
-  }: QueryFunctionContext): Promise<FullOrganizationType[]> => {
+  }: QueryFunctionContext): Promise<FullUserType[]> => {
     const take = 10;
     const response = await fetch(
-      `/api/organizations/getOrganizations?skip=${pageParam}&take=${take}&search=${searchQuery}`
+      `/api/users/getUsers?skip=${pageParam}&take=${take}&search=${searchQuery}`
     );
     if (!response.ok) throw new Error("Network response was not ok");
     const data = await response.json();
-    if (!Array.isArray(data.organizations)) return [];
-    return data.organizations;
+    if (!Array.isArray(data.users)) return [];
+    return data.users;
   };
 
   const {
@@ -45,8 +37,8 @@ const OrganizationExplore: React.FC<OrganizationsProps> = ({
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useInfiniteQuery<FullOrganizationType[], Error>({
-    queryKey: ["organizations", searchQuery],
+  } = useInfiniteQuery<FullUserType[], Error>({
+    queryKey: ["users", searchQuery],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length === 10 ? allPages.length * 10 : undefined,
@@ -75,15 +67,12 @@ const OrganizationExplore: React.FC<OrganizationsProps> = ({
   return (
     <div className="flex flex-col space-y-4">
       {/* Sabit Arama Kutusu */}
-      <div className="sticky top-0 z-10 flex items-center justify-between space-x-2">
+      <div className="sticky top-0 z-10 flex items-center space-x-2">
         <Search
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onClick={handleSearchClick}
         />
-        <Button onClick={() => router.push("/settings/organizations")}>
-          Oluştur
-        </Button>
       </div>
 
       {/* İçerik Alanı */}
@@ -114,9 +103,9 @@ const OrganizationExplore: React.FC<OrganizationsProps> = ({
           {data.pages.map((page, pageIndex) => (
             <React.Fragment key={pageIndex}>
               {page.map((user, postIndex) => (
-                <OrganizationCard
+                <UserCard
                   key={user.id}
-                  organization={user}
+                  user={user}
                   currentUser={currentUser}
                   ref={
                     pageIndex === data.pages.length - 1 &&
@@ -135,4 +124,4 @@ const OrganizationExplore: React.FC<OrganizationsProps> = ({
   );
 };
 
-export default OrganizationExplore;
+export default FriendsExplore;

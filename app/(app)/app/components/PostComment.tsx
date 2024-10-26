@@ -31,23 +31,20 @@ const PostComment: React.FC<PostCommentProps> = ({ post, currentUser }) => {
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(CommentFormSchema),
+    defaultValues: { postId: post.id },
   });
-
-  const { reset } = form;
-
-  // Post ID değerini ayarlayın
-  form.setValue("postId", post.id);
 
   // Yorum gönderme mutasyonu
   const commentMutation = useMutation({
     mutationFn: async (data: CommentFormValues) => {
-      const response = await axios.post('/api/post/comment/create', data);
+      const response = await axios.post("/api/post/comment/create", data);
       return response.data; // Yeni yorumu döndür
+      form.reset(); // Formu sıfırla
     },
     onSuccess: () => {
       // Yeni yorum gönderildikten sonra yorum sorgusunu geçersiz kıl
-      queryClient.invalidateQueries({ queryKey: ["comments", post.id]});
-      reset(); // Formu sıfırla
+      queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
+      form.reset(); // Formu sıfırla
     },
   });
 
@@ -57,7 +54,7 @@ const PostComment: React.FC<PostCommentProps> = ({ post, currentUser }) => {
   };
 
   return (
-    <div className="w-full gap-4 px-4 flex">
+    <div className="w-full gap-4 flex">
       <Link
         href={
           post.user ? `/${post.user.username}` : `/${post?.organization?.slug}`
@@ -79,17 +76,21 @@ const PostComment: React.FC<PostCommentProps> = ({ post, currentUser }) => {
           <FormField
             control={form.control}
             name="comment"
-            render={({ field }: { field: any }) => (
+            render={({ field }) => (
               <FormItem className="w-full">
                 <FormControl>
-                  <Input placeholder="Yorum yapın" {...field} />
+                  <Input
+                    placeholder="Yorum yapın"
+                    {...field}
+                    disabled={commentMutation.isPending}
+                  />
                 </FormControl>
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={commentMutation.isPending}>
+          {/* <Button type="submit" disabled={commentMutation.isLoading}>
             <Send className="h-5 w-5" />
-          </Button>
+          </Button> */}
         </form>
       </FormProvider>
     </div>

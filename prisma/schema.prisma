@@ -236,6 +236,7 @@ enum CommentStatus {
 model Post {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   attachments   Media[]
+  eventName     String?
   content       String
   type          PostType      @default(POST)
   status        PostStatus    @default(ACTIVE)

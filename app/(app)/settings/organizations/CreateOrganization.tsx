@@ -120,7 +120,7 @@ export function CreateOrganization({
     mode: "onChange",
   });
 
-  const { control, setValue, getValues, watch } = form;
+  const { control, setValue, getValues, watch, setError, clearErrors } = form;
   const onChange = async (file?: File) => {
     if (file) {
       setIsSubmitting(true);
@@ -192,7 +192,35 @@ export function CreateOrganization({
       return <IoIosLink />;
     }
   }
+
   const urls = [0, 1, 2, 3];
+
+  const username = watch("name");
+  useEffect(() => {
+    if (username) {
+      const checkUsername = async () => {
+        try {
+          const response = await axios.get(
+            `/api/organization/check-name?username=${username}`
+          );
+          if (!response.data.isAvailable) {
+            setError("name", {
+              type: "manual",
+              message: "İsim kullanılıyor",
+            });
+          } else {
+            clearErrors("name");
+          }
+        } catch (error) {
+          toast.error("Error checking username availability");
+        }
+      };
+
+      // Bir debounce etkisi yaratmak için kullanıcı yazmayı bitirene kadar kısa bir bekleme süresi
+      const timeoutId = setTimeout(checkUsername, 500);
+      return () => clearTimeout(timeoutId); // Her kullanıcı girişi olduğunda önceki timeout'u iptal ediyoruz
+    }
+  }, [username, setError, clearErrors]);
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-5xl max-h-screen ">

@@ -63,7 +63,7 @@ const PostCommentItem: React.FC<PostCommentItemProps> = ({
 
   return (
     <div className="flex flex-col space-y-2">
-      <div className="w-full px-4 flex items-center justify-between">
+      <div className="w-full flex items-center justify-between">
         <Link
           href={`/${comment.user?.username}`}
           className="flex items-center space-x-4"
@@ -130,7 +130,7 @@ const PostCommentItem: React.FC<PostCommentItemProps> = ({
           </DropdownMenu>
         )}
       </div>
-      <p className="text-sm pl-[72px]">{comment.content}</p>
+      <p className="text-sm pl-14">{comment.content}</p>
     </div>
   );
 };

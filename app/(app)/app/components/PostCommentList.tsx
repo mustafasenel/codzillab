@@ -100,7 +100,7 @@ const PostCommentList: React.FC<{
   return (
     <div className="w-full flex flex-col space-y-4">
       {data?.pages.flatMap((group) => group).length === 0 ? (
-        <div className="text-center">Yorum bulunamadı</div>
+        <div className="text-center text-xs text-muted-foreground">Yorum bulunamadı</div>
       ) : (
         data?.pages.flatMap((group) =>
           group.map((comment: FullCommentType) => (

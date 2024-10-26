@@ -12,15 +12,15 @@ export async function POST(req: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Postu bul ve sil
-        const post = await prisma.comment.findUnique({
+        // Postu sil
+        const comment = await prisma.comment.delete({
             where: { id: commentId },
         });
 
-        // Postu sil
-        await prisma.comment.delete({
-            where: { id: commentId },
-        });
+       const updatedPost =  await prisma.post.update({
+            where: { id: comment.postId },
+            data: { CommentsCount: { decrement: 1 } },
+          })
 
         return new NextResponse("comment deleted successfully", { status: 200 });
     } catch (error) {

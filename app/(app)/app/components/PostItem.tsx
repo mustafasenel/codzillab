@@ -50,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from '@/utils/getInitials'; // Fonksiyonu uygun yoldan import edin
+import PostItemModal from "./PostItemModal";
 
 interface PostItemProps {
   post: FullPostType;
@@ -183,13 +184,18 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
 });
 
 
-
-
-
 const handleDeletePost = () => {
     deleteMutation.mutate(); // Post silme fonksiyonunu tetikle
 };
 
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
+const handleOpenImageModal = () => {
+  setIsImageModalOpen(true)
+} 
+const handleCloseImageModal = () => {
+  setIsImageModalOpen(false)
+} 
   return (
     <Card className={cn(post.isPromoted && "border-[2px] border-[#FFA412]")}>
       {post.isPromoted && (
@@ -288,13 +294,14 @@ const handleDeletePost = () => {
       <CardContent className="flex flex-col space-y-4 p-0 pb-4">
         <p className="px-4 text-sm">{post.content}</p>
         <div
-          className={`grid gap-2 ${
+          className={`grid gap-2 cursor-pointer ${
             post.attachments?.length === 1
               ? "grid-cols-1"
               : post.attachments?.length === 2
               ? "grid-cols-2"
               : "grid-cols-4"
           }`}
+          onClick={() => handleOpenImageModal()}
         >
           {post.attachments?.map((attachment, index) => (
             <div key={index} className="w-full">
@@ -339,13 +346,14 @@ const handleDeletePost = () => {
         </div>
         <div
           className={cn(
-            isCommentSectionOpen ? "flex-col space-y-4 pt-4" : "hidden"
+            isCommentSectionOpen ? "flex-col space-y-4 pt-4 px-4" : "hidden"
           )}
         >
           <PostCommentList postId={post.id} postUserId={post.userId!} currentUser={currentUser} />
           <PostComment post={post} currentUser={currentUser} />
         </div>
       </CardContent>
+      <PostItemModal post={post} isOpen={isImageModalOpen} onClose={handleCloseImageModal} currentUser={currentUser}/>
     </Card>
   );
 };

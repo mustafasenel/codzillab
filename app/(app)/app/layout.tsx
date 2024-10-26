@@ -6,7 +6,7 @@ import { AiFillHome } from "react-icons/ai";
 import { IoGameController } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
 import { SidebarNav } from "./components/sidebar-nav";
-import { Building, Gamepad, Gamepad2, Home, Users } from "lucide-react";
+import { Building, Gamepad, Gamepad2, Home, UserPlus2, Users } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -48,6 +48,11 @@ export default async function TimelineLayout({
       title: "Sayfalar",
       href: `/app/organizations`,
       icon: <Building className="h-6 w-6" />,
+    },
+    {
+      title: "Arkadaş Bul",
+      href: `/app/friends`,
+      icon: <UserPlus2 className="h-6 w-6" />,
     },
   ];
 
