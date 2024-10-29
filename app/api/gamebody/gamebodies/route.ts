@@ -7,82 +7,54 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const gameId = searchParams.get("gameId");
     const platformId = searchParams.get("platformId");
+    const skip = parseInt(searchParams.get("skip") || "0", 10);
+    const take = parseInt(searchParams.get("take") || "8", 10);
 
     const currentUser = await getCurrentUser();
     if (!currentUser?.email) {
-      return new Response("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let gameBodies;
+    // Construct the where clause based on the provided filters
+    const whereClause = {
+      ...(gameId && { gameId }),
+      ...(platformId && {
+        game: {
+          platform: {
+            has: platformId,
+          },
+        },
+      }),
+    };
 
-    if (gameId && platformId) {
-      // Both gameId and platformId provided
-      gameBodies = await prisma.gameBody.findMany({
-        where: {
-          gameId: gameId,
-          game: {
-            platform: {
-              has: platformId,
-            },
-          },
-        },
-        include: {
-          user: true,
-          game: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    } else if (gameId) {
-      // Only gameId provided
-      gameBodies = await prisma.gameBody.findMany({
-        where: {
-          gameId: gameId,
-        },
-        include: {
-          user: true,
-          game: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    } else if (platformId) {
-      // Only platformId provided
-      console.log("PLATFORM ADDDED")
-      gameBodies = await prisma.gameBody.findMany({
-        where: {
-          game: {
-            platform: {
-              has: platformId,
-            },
-          },
-        },
-        include: {
-          user: true,
-          game: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    } else {
-      // No filters applied
-      gameBodies = await prisma.gameBody.findMany({
-        include: {
-          user: true,
-          game: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    }
-    // Eğer oyun verisi yoksa boş bir liste dön
-    return NextResponse.json(gameBodies || []);
+    // Fetch game bodies with the constructed where clause
+    const gameBodies = await prisma.gameBody.findMany({
+      where: whereClause,
+      include: {
+        user: true,
+        game: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take,
+    });
+
+    // Count the total number of game bodies matching the filters
+    const totalGameBodies = await prisma.gameBody.count({
+      where: whereClause,
+    });
+
+    // Return the response with pagination info
+    return NextResponse.json({
+      gameBodies,
+      total: totalGameBodies,
+      page: Math.floor(skip / take) + 1,
+      totalPages: Math.ceil(totalGameBodies / take),
+    });
   } catch (error: any) {
-    console.error(error, "GAME FETCH ERROR");
-    return new NextResponse("Internal Server Error", { status: 500 });
+    console.error("GAME FETCH ERROR:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

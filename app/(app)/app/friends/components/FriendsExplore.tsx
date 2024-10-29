@@ -20,7 +20,7 @@ const FriendsExplore: React.FC<FriendsExploreProps> = ({ currentUser }) => {
   const fetchPosts = async ({
     pageParam = 0,
   }: QueryFunctionContext): Promise<FullUserType[]> => {
-    const take = 10;
+    const take = 8;
     const response = await fetch(
       `/api/users/getUsers?skip=${pageParam}&take=${take}&search=${searchQuery}`
     );
@@ -41,7 +41,7 @@ const FriendsExplore: React.FC<FriendsExploreProps> = ({ currentUser }) => {
     queryKey: ["users", searchQuery],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === 10 ? allPages.length * 10 : undefined,
+      lastPage.length === 8 ? allPages.length * 8 : undefined,
     initialPageParam: 0,
   });
 
@@ -65,9 +65,9 @@ const FriendsExplore: React.FC<FriendsExploreProps> = ({ currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col space-y-4">
+    <div className="flex flex-col space-y-4 pb-20">
       {/* Sabit Arama Kutusu */}
-      <div className="sticky top-0 z-10 flex items-center space-x-2">
+      <div className="flex items-center space-x-2">
         <Search
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

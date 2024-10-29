@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pulse | Login",
-  description: "Pulse | Login",
+  title: "Codzillab | Giriş Yap",
+  description: "Codzillab | Giriş Yap",
 };
 
 export default async function Authlayout({

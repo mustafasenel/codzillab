@@ -28,6 +28,13 @@ import { FullOrganizationType, FullUserType } from "@/types";
 import { IoIosLink } from "react-icons/io";
 import { FaGithub, FaFacebook, FaLinkedin, FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const OrganizationFormSchema = z.object({
   id: z.string().optional(),
@@ -127,7 +134,7 @@ export function OrganizationUpdateForm({
 
   const { control, setValue, getValues, watch, setError, clearErrors } = form;
 
-  const newSlug = watch("slug")
+  const newSlug = watch("slug");
   function onSubmit(data: OrganizationFormValues) {
     try {
       setIsLoading(true);
@@ -200,6 +207,34 @@ export function OrganizationUpdateForm({
     }
   }, [name, setError, clearErrors]);
   const urls = [0, 1, 2, 3];
+
+  // Organizasyon Silme İşlemleri
+
+  const [deleteOrganizationControl, setDeleteOrganizationControl] =
+    useState("");
+
+  // Check if the input matches the organization's email
+  const isEmailCorrect =
+    deleteOrganizationControl === organization?.contactEmail;
+
+  const deleteOrganization = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios
+        .post("/api/organization/delete", {
+          organizationId: organization?.id, // Pass the organizationId
+          email: deleteOrganizationControl, // Pass the email for verification
+        })
+        .then(() => {
+          toast.success("Organizasyon başarıyla silindi");
+          router.push("/settings/organizations")
+        })
+        .finally(() => setIsLoading(false));
+    } catch (error) {
+      console.error("Error deleting organization:", error);
+      // Handle error (e.g., show an error message)
+    }
+  };
 
   return (
     <Form {...form}>
@@ -366,6 +401,38 @@ export function OrganizationUpdateForm({
           Güncelle
         </Button>
       </form>
+      <Card className="border-red-500">
+        <CardHeader>
+          <CardTitle className="font-semibold">Organizasyonu Sil</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col space-y-4">
+          <p>
+            Organizasyonunuzu silmek istediğinize emin misiniz? Bu işlem geri
+            alınamaz.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Doğrulama için lütfen organizasyonun email adresini ilgili kutucuğa
+            giriniz.
+          </p>
+          <Input
+            value={deleteOrganizationControl}
+            onChange={(e) => setDeleteOrganizationControl(e.target.value)} // Update the input value
+            placeholder={
+              organization?.contactEmail ? organization.contactEmail : ""
+            }
+          />
+        </CardContent>
+        <CardFooter className="w-full flex justify-end">
+          <Button
+            variant="destructive"
+            type="button"
+            onClick={deleteOrganization}
+            disabled={!isEmailCorrect}
+          >
+            Organizasyonu Sil
+          </Button>
+        </CardFooter>
+      </Card>
     </Form>
   );
 }

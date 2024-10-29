@@ -16,13 +16,16 @@ import { tr } from "date-fns/locale";
 import { Calendar, Eye, MapPin, User, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 
 interface AdvertCardProps {
   advert: FullGameBodyType;
 }
 
-const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
+const AdvertCard = forwardRef<HTMLDivElement, AdvertCardProps>(function AdvertCard(
+  { advert},
+  ref
+) {
   const [displayDate, setDisplayDate] = useState<string>("");
   useEffect(() => {
     const oneWeekAgo = subWeeks(new Date(), 1);
@@ -161,6 +164,8 @@ const AdvertCard: React.FC<AdvertCardProps> = ({ advert }) => {
       </div>
     </Card>
   );
-};
+})
+// Set displayName for debugging
+AdvertCard.displayName = "AdvertCard";
 
 export default AdvertCard;

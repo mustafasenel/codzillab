@@ -28,6 +28,7 @@ import { FullUserType } from "@/types";
 import { IoIosLink } from "react-icons/io";
 import { FaGithub, FaFacebook, FaLinkedin, FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const profileFormSchema = z.object({
   username: z
@@ -317,6 +318,7 @@ export function ProfileForm({ user }: ProfileFormTypes) {
           Güncelle
         </Button>
       </form>
+
     </Form>
   );
 }

@@ -5,7 +5,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { TabsContent } from "@/components/ui/tabs";
 import { FullGameBodyType, FullUserType } from "@/types";
 import { Game } from "@prisma/client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import AdvertCard from "./AdvertCard";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -14,6 +14,7 @@ import { X } from "lucide-react";
 import SkeletonCard from "./SkeletonCard";
 import SearchGame from "./SearchGame";
 import SearchPlatform from "./SearchPlatform";
+import { QueryFunctionContext, useInfiniteQuery } from "@tanstack/react-query";
 
 interface BrowseContentProps {
   user: FullUserType;
@@ -22,50 +23,63 @@ interface BrowseContentProps {
 
 const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedGameBodies, setSelectedGameBodies] = useState<FullGameBodyType[]>([]);
-  const [loading, setLoading] = useState(false);
+
   const [isScrolled, setIsScrolled] = useState(false);
 
   const [selectedGames, setSelectedGames] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
 
+  // Temporary state to hold the selections
+  const [tempSelectedGames, setTempSelectedGames] = useState("");
+  const [tempSelectedPlatform, setTempSelectedPlatform] = useState("");
 
-  const handleGameChange = (gameName: string) => {
-    setSelectedGames(gameName);
+  const fetchGameBodies = async ({
+    pageParam = 0,
+  }: QueryFunctionContext): Promise<FullGameBodyType[]> => {
+    const take = 8;
+    const response = await fetch(
+      `/api/gamebody/gamebodies?skip=${pageParam}&take=${take}&gameId=${selectedGames}&platformId=${selectedPlatform}`
+    );
+    if (!response.ok) throw new Error("Network response was not ok");
+    const data = await response.json();
+    if (!Array.isArray(data.gameBodies)) return [];
+    return data.gameBodies;
   };
 
-  const handlePlatformChange = (platformName: string) => {
-    setSelectedPlatform(platformName); // Seçilen oyunu state'e atıyoruz
-  };
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+  } = useInfiniteQuery<FullGameBodyType[], Error>({
+    queryKey: ["gamebodies", selectedGames, selectedPlatform],
+    queryFn: fetchGameBodies,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === 8 ? allPages.length * 8 : undefined,
+    initialPageParam: 0,
+  });
 
-  const handleSearch = () => {
-    fetchGameBodies(selectedGames, selectedPlatform);
-  }
-  
-  const fetchGameBodies = async (gameId?: string, platformId?: string) => {
-    setLoading(true);
-    try {
-      const url = new URL('/api/gamebody/gamebodies', window.location.origin);
-      if (gameId) url.searchParams.append('gameId', gameId);
-      if (platformId) url.searchParams.append('platformId', platformId);
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      setSelectedGameBodies(data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching game bodies:", error);
-      setLoading(false);
-    }
-  };
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  useEffect(() => {
-    fetchGameBodies();
-  }, []);
+  const lastAdvertRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isFetchingNextPage) return;
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) fetchNextPage();
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [isLoading, isFetchingNextPage, fetchNextPage, hasNextPage]
+  );
 
   const handleGameClick = (gameId: string) => {
-    fetchGameBodies(gameId);
+    setSelectedGames(gameId); // Sets the selected game, which will automatically trigger a refetch due to the queryKey dependency
   };
+
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = event.currentTarget.scrollTop;
     if (scrollTop > 20) {
@@ -75,11 +89,18 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
     }
   };
 
+  const handleSearch = () => {
+    setSelectedGames(tempSelectedGames); // Update the selected games
+    setSelectedPlatform(tempSelectedPlatform); // Update the selected platform
+    refetch(); // Trigger the fetching
+  };
   const handleClear = () => {
     setSelectedGames("");
-    fetchGameBodies();
+    setSelectedPlatform("");
+    setTempSelectedGames("");
+    setTempSelectedPlatform("");
+    refetch();
   };
-
   return (
     <div className="h-[calc(100vh-150px)]">
       <div
@@ -100,10 +121,7 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
                     className={cn(
                       "flex-shrink-0 w-32 overflow-hidden cursor-pointer rounded-none shadow-none border-none"
                     )}
-                    onClick={() => {
-                      handleGameClick(game.id);
-                      setSelectedGames(game.id);
-                    }} // Oyuna tıklama işlemi
+                    onClick={() => handleGameClick(game.id)}
                   >
                     <CardContent className="relative aspect-[3/4] p-0 z-10">
                       <div
@@ -141,25 +159,29 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
           <div className="flex gap-4">
             <SearchGame
               games={games!}
-              value={selectedGames}
-              onChange={handleGameChange}
+              value={tempSelectedGames} // Use temporary state here
+              onChange={setTempSelectedGames} // Update temporary state on change
             />
             <SearchPlatform
-              value={selectedPlatform}
-              onChange={handlePlatformChange}
+              value={tempSelectedPlatform} // Use temporary state here
+              onChange={setTempSelectedPlatform} // Update temporary state on change
             />
           </div>
           <div className="flex gap-2">
-            {
-              (selectedGames || selectedPlatform) && (
-                <Button variant={"outline"} onClick={() => { setSelectedGames(""); setSelectedPlatform(""); fetchGameBodies() }}>Temizle</Button>
-              )
-            }
-            <Button variant={"secondary"} onClick={handleSearch}>Filtrele</Button>
+            {(tempSelectedGames || tempSelectedPlatform) && (
+              <Button
+                variant={"outline"}
+                onClick={handleClear}
+              >
+                Temizle
+              </Button>
+            )}
+            <Button variant={"secondary"} onClick={handleSearch}>
+              Filtrele
+            </Button>
           </div>
         </div>
       </div>
-
       <div
         className={cn(
           isScrolled ? "h-[calc(100vh-160px)] " : "h-[calc(100vh-400px)]",
@@ -169,17 +191,25 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
       >
         <div className="py-4 flex flex-col">
           <div className="grid md:grid-cols-2 grid-cols-1 gap-4 pr-3">
-            {loading ? (
+            {isLoading ? (
               <>
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
               </>
-            ) : !!selectedGameBodies.length ? (
-              selectedGameBodies.map((advert) => (
-                <AdvertCard key={advert.id} advert={advert!} />
-              ))
+            ) : data &&
+              data.pages.length > 0 &&
+              data.pages.flat().length > 0 ? (
+              data.pages
+                .flat()
+                .map((advert) => (
+                  <AdvertCard
+                    key={advert.id}
+                    advert={advert}
+                    ref={lastAdvertRef}
+                  />
+                ))
             ) : (
               <div className="flex">Henüz Oyuna ait ilan yok</div>
             )}

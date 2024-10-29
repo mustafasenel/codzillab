@@ -11,7 +11,7 @@ import axios from 'axios';
 import { UserCheck, UserPlus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useState } from 'react'
 
 interface OrganizationCardProps {
     organization: FullOrganizationType;
@@ -19,78 +19,80 @@ interface OrganizationCardProps {
     ref: any
 }
 
-const OrganizationCard:React.FC<OrganizationCardProps> = ({ organization, currentUser, ref }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFollowing, setIsFollowing] = useState(false);
-  
-    const queryClient = useQueryClient();
+const OrganizationCard = forwardRef<HTMLDivElement, OrganizationCardProps>(function OrganizationCard(
+  { organization, currentUser },
+  ref
+) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
-    // Fetch the follow status
-    const {
-      data: followStatus,
-      isLoading: followLoading,
-      error: followError,
-    } = useQuery({
-      queryKey: ["checkFollowOrg", organization?.id],
-      queryFn: async () => {
-        const response = await axios.post("/api/organization/follow/check-follow", {
+  const queryClient = useQueryClient();
+
+  // Fetch the follow status
+  const {
+    data: followStatus,
+    isLoading: followLoading,
+    error: followError,
+  } = useQuery({
+    queryKey: ["checkFollowOrg", organization?.id],
+    queryFn: async () => {
+      const response = await axios.post("/api/organization/follow/check-follow", {
+        recipientId: organization?.id,
+      });
+      return response.data;
+    },
+    enabled: !!organization?.id && !!currentUser, // Only fetch when user.id and currentUser are available
+  });
+
+
+  useEffect(() => {
+    if (followStatus) {
+      setIsFollowing(followStatus.hasRequest);
+    }
+  }, [followStatus, organization]);
+
+  // Mutation for following/unfollowing a user or organization
+  const followMutation = useMutation({
+    mutationKey: ["followOrg", organization?.id], // Using mutationKey for tracking
+    mutationFn: async () => {
+        return axios.post("/api/organization/follow", {
           recipientId: organization?.id,
         });
-        return response.data;
-      },
-      enabled: !!organization?.id && !!currentUser, // Only fetch when user.id and currentUser are available
-    });
-  
+    },
+    onMutate: async () => {
+      // Mutasyon başlamadan önce durumları güncelle
+      await queryClient.cancelQueries({ queryKey: ["checkFollowOrg", organization?.id] });
 
-    useEffect(() => {
-      if (followStatus) {
-        setIsFollowing(followStatus.hasRequest);
+      const previousFollowStatus = queryClient.getQueryData([
+        "checkFollowOrg",
+        organization?.id,
+      ]);
+
+      setIsFollowing((prev) => !prev); // Takip durumunu tersine çevir
+
+      return { previousFollowStatus }; // Geri döndür
+    },
+    onError: (error, _, context) => {
+      console.error("Takip işlemi sırasında hata oluştu:", error);
+      if (context?.previousFollowStatus) {
+        queryClient.setQueryData(
+          ["checkFollowOrg", organization?.id],
+          context.previousFollowStatus
+        );
       }
-    }, [followStatus, organization]);
-  
-    // Mutation for following/unfollowing a user or organization
-    const followMutation = useMutation({
-      mutationKey: ["followOrg", organization?.id], // Using mutationKey for tracking
-      mutationFn: async () => {
-          return axios.post("/api/organization/follow", {
-            recipientId: organization?.id,
-          });
-      },
-      onMutate: async () => {
-        // Mutasyon başlamadan önce durumları güncelle
-        await queryClient.cancelQueries({ queryKey: ["checkFollowOrg", organization?.id] });
 
-        const previousFollowStatus = queryClient.getQueryData([
-          "checkFollowOrg",
-          organization?.id,
-        ]);
-
-        setIsFollowing((prev) => !prev); // Takip durumunu tersine çevir
-
-        return { previousFollowStatus }; // Geri döndür
-      },
-      onError: (error, _, context) => {
-        console.error("Takip işlemi sırasında hata oluştu:", error);
-        if (context?.previousFollowStatus) {
-          queryClient.setQueryData(
-            ["checkFollowOrg", organization?.id],
-            context.previousFollowStatus
-          );
-        }
-
-      },
-      onSuccess: () => {
-        // Invalidate queries to refetch data after mutation success
-        if (organization?.id !== undefined) {
-          queryClient.invalidateQueries({ queryKey: ["checkFollow", organization?.id] }); // Invalidate follow query
-        }
+    },
+    onSuccess: () => {
+      // Invalidate queries to refetch data after mutation success
+      if (organization?.id !== undefined) {
+        queryClient.invalidateQueries({ queryKey: ["checkFollow", organization?.id] }); // Invalidate follow query
       }
-    });
-  
-    const handleFollow = () => {
-      followMutation.mutate();
-    };
+    }
+  });
 
+  const handleFollow = () => {
+    followMutation.mutate();
+  };
   return (
     <Card className="p-0 flex flex-col">
     <div
@@ -151,7 +153,10 @@ const OrganizationCard:React.FC<OrganizationCardProps> = ({ organization, curren
       </div>
     </div>
   </Card>
-  )
-}
+  );
+});
 
-export default OrganizationCard
+// Set displayName for debugging
+OrganizationCard.displayName = "OrganizationCard";
+
+export default OrganizationCard;

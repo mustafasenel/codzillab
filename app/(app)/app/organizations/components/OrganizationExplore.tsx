@@ -28,7 +28,7 @@ const OrganizationExplore: React.FC<OrganizationsProps> = ({
   const fetchPosts = async ({
     pageParam = 0,
   }: QueryFunctionContext): Promise<FullOrganizationType[]> => {
-    const take = 10;
+    const take = 8;
     const response = await fetch(
       `/api/organizations/getOrganizations?skip=${pageParam}&take=${take}&search=${searchQuery}`
     );
@@ -49,7 +49,7 @@ const OrganizationExplore: React.FC<OrganizationsProps> = ({
     queryKey: ["organizations", searchQuery],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === 10 ? allPages.length * 10 : undefined,
+      lastPage.length === 8 ? allPages.length * 8 : undefined,
     initialPageParam: 0,
   });
 
