@@ -138,6 +138,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
     onSuccess: () => {
       toast.success("Post oluşturuldu!");
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['userPosts'] });
     },
     onError: () => {
       toast.error("An error occurred");
@@ -197,7 +198,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card className="space-y-6 pt-6 bg-muted">
-            <CardContent className="flex flex-col gap-6">
+            <CardContent className="flex flex-col gap-6 md:px-4 px-2">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="flex items-center justify-start md:justify-center">
                   <Avatar>
@@ -297,7 +298,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
                     );
                   }}
                 />
-                <div className="w-full flex flex-col md:flex-row items-start md:items-center  justify-between gap-4 md:gap-6">
+                <div className="w-full flex flex-row items-center justify-between gap-4 md:gap-6">
                   <Button
                     className="gap-2 hover:bg-primary-foreground"
                     variant={"ghost"}
@@ -306,15 +307,15 @@ const CreatePost: React.FC<CreatePostProps> = ({
                     id="image-upload-button"
                   >
                     <Image size={20} />
-                    Görsel Yükle
+                    <span className="md:flex hidden">Görsel Yükle</span>
                   </Button>
                   <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button">
                     <Video size={20} />
-                    Video Yükle
+                    <span className="md:flex hidden">Video Yükle</span>
                   </Button>
                   <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button">
                     <CalendarClock size={20} />
-                    Etkinlik Oluştur
+                    <span className="md:flex hidden">Etkinlik Oluştur</span>
                   </Button>
                 </div>
               </div>

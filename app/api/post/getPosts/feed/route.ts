@@ -13,13 +13,15 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const followedUserIds = currentUser.followers?.map(following => following.followingId);
+        const organizationFollowedIds = currentUser.organizationFollowers?.map(following => following.organizationId);
 
-        // Kullanıcının kendi postlarını ve takip ettiği kişilerin postlarını al
+        console.log("organization followers: ", organizationFollowedIds)
         const posts = await prisma.post.findMany({
             where: {
                 OR: [
                     { userId: currentUser.id }, // Kullanıcının kendi postları
-                    { userId: { in: followedUserIds } } // Takip edilenlerin postları
+                    { userId: { in: followedUserIds } }, // Takip edilen kullanıcıların postları
+                    { organizationId: { in: organizationFollowedIds } } 
                 ],
             },
             orderBy: {
@@ -39,8 +41,9 @@ export async function GET(request: Request) {
         const totalPosts = await prisma.post.count({
             where: {
                 OR: [
-                    { userId: currentUser.id },
-                    { userId: { in: followedUserIds } }
+                    { userId: currentUser.id }, // Kullanıcının kendi postları
+                    { userId: { in: followedUserIds } }, // Takip edilen kullanıcıların postları
+                    { organizationId: { in: organizationFollowedIds } } 
                 ],
             },
         });

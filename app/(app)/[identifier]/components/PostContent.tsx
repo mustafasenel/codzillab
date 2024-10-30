@@ -17,9 +17,20 @@ const PostContent: React.FC<PostContentProps> = ({ user, currentUser }) => {
   const fetchPosts = async ({
     pageParam = 0,
   }: QueryFunctionContext): Promise<FullPostType[]> => {
-    const take = 10; // Her istekte kaç post getirileceği
+    const take = 10;
+
+    let organizationId = "";
+    let userId = "";
+    console.log("USERID :", user?.id)
+    if (isFullUserType(user)) {
+        userId = user.id
+    } else if (isFullOrganizationType(user)) {
+      organizationId = user.id
+    } else {
+      console.log("İKİ TÜRDE DE DEĞİL")
+    }
     const response = await fetch(
-      `/api/post/getUserPosts?skip=${pageParam}&take=${take}&userId=${user?.id}&organizationId=${user?.id}`
+      `/api/post/getUserPosts?skip=${pageParam}&take=${take}&userId=${userId}&organizationId=${organizationId}`
     );
     if (!response.ok) {
       throw new Error("Network response was not ok");
@@ -36,6 +47,14 @@ const PostContent: React.FC<PostContentProps> = ({ user, currentUser }) => {
     return data.posts; // Dizi olarak döndür
   };
 
+  function isFullUserType(user: FullUserType | FullOrganizationType | null | undefined): user is FullUserType {
+    return (user as FullUserType)?.username !== undefined;
+  }
+  
+  function isFullOrganizationType(user: FullUserType | FullOrganizationType | null | undefined): user is FullOrganizationType {
+    return (user as FullOrganizationType)?.slug !== undefined;
+  }
+
   const {
     data,
     error,
@@ -44,7 +63,7 @@ const PostContent: React.FC<PostContentProps> = ({ user, currentUser }) => {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery<FullPostType[], Error>({
-    queryKey: ["userPosts"],
+    queryKey: ["posts"],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === 10 ? allPages.length * 10 : undefined; // Eğer son sayfa 10 post içeriyorsa, bir sonraki sayfa parametresi döndür

@@ -255,7 +255,7 @@ model Post {
   user   User?   @relation("UserPosts", fields: [userId], references: [id], onDelete: Cascade)
 
   organizationId String?       @db.ObjectId
-  organization   Organization? @relation("OrganizationPosts", fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation("OrganizationPosts", fields: [organizationId], references: [id], onDelete: Cascade)
 
   tags     PostTag[] @relation("PostTags")
   likes    Like[]    @relation("PostLikes")

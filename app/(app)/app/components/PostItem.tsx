@@ -49,8 +49,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getInitials } from '@/utils/getInitials'; // Fonksiyonu uygun yoldan import edin
+import { getInitials } from "@/utils/getInitials"; // Fonksiyonu uygun yoldan import edin
 import PostItemModal from "./PostItemModal";
+import { formatText } from "@/utils/formatTag";
 
 interface PostItemProps {
   post: FullPostType;
@@ -147,11 +148,59 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-        const response = await axios.post(`/api/post/delete`, { postId: post.id });
+      const response = await axios.post(`/api/post/delete`, {
+        postId: post.id,
+      });
+      return response.data;
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+
+      const prevPostsData = queryClient.getQueryData<{
+        pages: FullPostType[][];
+      }>(["posts"]);
+
+      if (!prevPostsData) {
+        return;
+      }
+
+      // Silinecek postu filtrele
+      const newPagesData = prevPostsData.pages.map((page) =>
+        page.filter((postItem) => postItem.id !== post.id)
+      );
+
+      // Yeni veriyi ayarla, yapıyı koruyarak
+      queryClient.setQueryData(["posts"], {
+        ...prevPostsData, // Önceki verinin diğer alanlarını kopyala
+        pages: newPagesData, // Sadece pages alanını güncelle
+      });
+
+      return { prevPostsData };
+    },
+    onError: (error, variables, context) => {
+      if (context?.prevPostsData) {
+        queryClient.setQueryData(["posts"], context.prevPostsData);
+      }
+      console.error("Post silinirken hata:", error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+
+  const handleDeletePost = () => {
+    deleteMutation.mutate(); // Post silme fonksiyonunu tetikle
+  };
+
+  const updateCommentStatusMutation = useMutation({
+    mutationFn: async () => {
+        const response = await axios.put(`/api/post/update/commentStatus`, {
+          postId: post.id,
+        });
         return response.data;
     },
-    onMutate: async () => { 
-        await queryClient.cancelQueries({ queryKey: ["posts"] }); 
+    onMutate: async () => {
+        await queryClient.cancelQueries({ queryKey: ["posts"] });
         
         const prevPostsData = queryClient.getQueryData<{ pages: FullPostType[][] }>(["posts"]);
 
@@ -159,12 +208,13 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
             return; 
         }
 
-        // Silinecek postu filtrele
-        const newPagesData = prevPostsData.pages.map(page => 
-            page.filter(postItem => postItem.id !== post.id)
+        // Güncellenen postu filtrele
+        const newPagesData = prevPostsData.pages.map(page =>
+            page.map(postItem => 
+                postItem.id === post.id ? { ...postItem, ...post } : postItem
+            )
         );
 
-        // Yeni veriyi ayarla, yapıyı koruyarak
         queryClient.setQueryData(["posts"], { 
             ...prevPostsData, // Önceki verinin diğer alanlarını kopyala
             pages: newPagesData // Sadece pages alanını güncelle
@@ -176,26 +226,26 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         if (context?.prevPostsData) {
             queryClient.setQueryData(["posts"], context.prevPostsData);
         }
-        console.error("Post silinirken hata:", error);
-    }, 
+        console.error("Post güncellenirken hata:", error);
+    },
     onSuccess: () => { 
         queryClient.invalidateQueries({ queryKey: ["posts"] }); 
-    }, 
+    },
 });
 
-
-const handleDeletePost = () => {
-    deleteMutation.mutate(); // Post silme fonksiyonunu tetikle
+// Post güncelleme işlevi
+const handleCommentStatus = () => {
+  updateCommentStatusMutation.mutate(); // Güncelleme fonksiyonunu tetikle
 };
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
-const handleOpenImageModal = () => {
-  setIsImageModalOpen(true)
-} 
-const handleCloseImageModal = () => {
-  setIsImageModalOpen(false)
-} 
+  const handleOpenImageModal = () => {
+    setIsImageModalOpen(true);
+  };
+  const handleCloseImageModal = () => {
+    setIsImageModalOpen(false);
+  };
   return (
     <Card className={cn(post.isPromoted && "border-[2px] border-[#FFA412]")}>
       {post.isPromoted && (
@@ -226,7 +276,9 @@ const handleCloseImageModal = () => {
               width={15}
             />
 
-            <AvatarFallback>{getInitials(post.user?.name || post.organization?.name)}</AvatarFallback>
+            <AvatarFallback>
+              {getInitials(post.user?.name || post.organization?.name)}
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-col justify-between py-1">
             <div className="flex gap-2 items-center">
@@ -252,20 +304,24 @@ const handleCloseImageModal = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end">
-            {post.user?.id === currentUser.id ? (
+            {post.user?.id === currentUser.id ||
+            post.organization?.ownerId === currentUser.id ? (
               <>
                 <DropdownMenuGroup>
                   <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
                     <Pen className="h-4 w-4" />
                     <span>Postu Düzenle</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={handleDeletePost}>
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={handleDeletePost}
+                  >
                     <Trash2 className="h-4 w-4" />
                     <span>Postu Sil</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={handleCommentStatus}>
                     <MessageSquareText className="h-4 w-4" />
-                    <span>Yorumları Kapat</span>
+                    <span>{post.commentStatus === "ACTIVE" ? "Yorumları Kapat" : "Yorumları Aç"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
@@ -283,7 +339,7 @@ const handleCloseImageModal = () => {
             ) : (
               <DropdownMenuGroup>
                 <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                  <TriangleAlertIcon className="h-4 w-4"/>
+                  <TriangleAlertIcon className="h-4 w-4" />
                   <span>Postu bildir</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -292,7 +348,7 @@ const handleCloseImageModal = () => {
         </DropdownMenu>
       </div>
       <CardContent className="flex flex-col space-y-4 p-0 pb-4">
-        <p className="px-4 text-sm">{post.content}</p>
+        <p className="px-4 text-sm"> {formatText(post.content)}</p>
         <div
           className={`grid gap-2 cursor-pointer ${
             post.attachments?.length === 1
@@ -327,33 +383,46 @@ const handleCloseImageModal = () => {
             </button>
             <p className="text-sm text-muted-foreground">{likeCount}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)}
-            >
-              <MessageSquareText className="h-5 w-5" />
-            </button>
-            <p className="text-sm text-muted-foreground">
-              {post.CommentsCount}
-            </p>
-          </div>
+          {post.commentStatus === "ACTIVE" && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCommentSectionOpen(!isCommentSectionOpen)}
+              >
+                <MessageSquareText className="h-5 w-5" />
+              </button>
+              <p className="text-sm text-muted-foreground">
+                {post.CommentsCount}
+              </p>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <button type="button">
               <Send className="h-5 w-5" />
             </button>
           </div>
         </div>
-        <div
-          className={cn(
-            isCommentSectionOpen ? "flex-col space-y-4 pt-4 px-4" : "hidden"
-          )}
-        >
-          <PostCommentList postId={post.id} postUserId={post.userId!} currentUser={currentUser} />
-          <PostComment post={post} currentUser={currentUser} />
-        </div>
+        {post.commentStatus === "ACTIVE" && (
+          <div
+            className={cn(
+              isCommentSectionOpen ? "flex-col space-y-4 pt-4 px-4" : "hidden"
+            )}
+          >
+            <PostCommentList
+              postId={post.id}
+              postUserId={post.userId!}
+              currentUser={currentUser}
+            />
+            <PostComment post={post} currentUser={currentUser} />
+          </div>
+        )}
       </CardContent>
-      <PostItemModal post={post} isOpen={isImageModalOpen} onClose={handleCloseImageModal} currentUser={currentUser}/>
+      <PostItemModal
+        post={post}
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        currentUser={currentUser}
+      />
     </Card>
   );
 };

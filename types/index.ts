@@ -11,6 +11,8 @@ import {
   OrganizationFollower,
   OrganizationMember,
   Post,
+  PostTag,
+  Tag,
   User,
   UserGame,
 } from "@prisma/client";
@@ -19,6 +21,7 @@ export type FullUserType = User & {
   account: Account[] | null;
   followers: Follower[] | null;
   followings: Follower[] | null;
+  organizationFollowers: OrganizationFollower[] |null;
   friendRequestSent: FullFriendRequestType[] | [];
   friendRequestReceived: FullFriendRequestType[] | [];
   UserGames: FullUserGameType[] | []
@@ -58,4 +61,8 @@ export type FullPostType = Post & {
 export type FullCommentType = Comment & {
   user?: User;
   likes?:FullLikeType[]
+}
+
+export type FullTagType = Tag & {
+  posts: PostTag[] 
 }

@@ -167,10 +167,7 @@ const PostItemModal: React.FC<PostItemModalProps> = ({
           </div>
           <div className="md:col-span-2 py-4 max-h-[700px] overflow-y-auto">
             <div className="flex flex-col space-y-4">
-              <div
-
-                className="flex items-center space-x-4"
-              >
+              <div className="flex items-center space-x-4">
                 <Avatar>
                   <AvatarImage
                     src={
@@ -222,33 +219,37 @@ const PostItemModal: React.FC<PostItemModalProps> = ({
                   </button>
                   <p className="text-sm text-muted-foreground">{likeCount}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsCommentSectionOpen(!isCommentSectionOpen)
-                    }
-                  >
-                    <MessageSquareTextIcon className="h-5 w-5" />
-                  </button>
-                  <p className="text-sm text-muted-foreground">
-                    {post.CommentsCount}
-                  </p>
-                </div>
+                {post.commentStatus === "ACTIVE" && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsCommentSectionOpen(!isCommentSectionOpen)
+                      }
+                    >
+                      <MessageSquareTextIcon className="h-5 w-5" />
+                    </button>
+                    <p className="text-sm text-muted-foreground">
+                      {post.CommentsCount}
+                    </p>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <button type="button">
                     <Send className="h-5 w-5" />
                   </button>
                 </div>
               </div>
-              <div className="flex-col space-y-4 pt-4 pr-4">
-                <PostComment post={post} currentUser={currentUser} />
-                <PostCommentList
-                  postId={post.id}
-                  postUserId={post.userId!}
-                  currentUser={currentUser}
-                />
-              </div>
+              {post.commentStatus === "ACTIVE" && (
+                <div className="flex-col space-y-4 pt-4 pr-4">
+                  <PostComment post={post} currentUser={currentUser} />
+                  <PostCommentList
+                    postId={post.id}
+                    postUserId={post.userId!}
+                    currentUser={currentUser}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

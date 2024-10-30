@@ -12,6 +12,29 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { content, attachments, isOrganization, userId_organizationId } = body;
 
+        // 1. Tag'leri ayır
+        const tags: string[] = content.match(/#\w+/g) || []; // # ile başlayan kelimeleri al
+        const uniqueTags: string[] = []; // uniqueTags için açık tür tanımı
+        const tagSet: { [key: string]: boolean } = {}; // Benzersiz tag'leri kontrol etmek için nesne
+
+        tags.forEach(tag => {
+            const tagName = tag.substring(1); // # işaretini kaldır
+            if (!tagSet[tagName]) {
+                tagSet[tagName] = true; // Tag'leri benzersiz hale getir
+                uniqueTags.push(tagName); // Benzersiz tag'i ekle
+            }
+        });
+
+        // 2. Tag'leri veritabanına kaydet
+        const tagRecords = await Promise.all(uniqueTags.map(async tag => {
+            return await prisma.tag.upsert({
+                where: { name: tag },
+                update: {},
+                create: { name: tag },
+            });
+        }));
+
+        // 3. Yeni post verisini oluştur
         let newPostData;
 
         if (isOrganization) {
@@ -38,6 +61,16 @@ export async function POST(request: Request) {
                 },
             },
         });
+
+        // 4. Post ile tag'leri ilişkilendirme
+        await Promise.all(tagRecords.map(async (tagRecord) => {
+            await prisma.postTag.create({
+                data: {
+                    postId: newPost.id,
+                    tagId: tagRecord.id,
+                },
+            });
+        }));
 
         return new NextResponse(JSON.stringify(newPost), { status: 201 });
 

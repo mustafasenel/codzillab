@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -6,6 +8,7 @@ import { Megaphone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import TagList from "./TagList";
 
 interface RightBarProps {
   user: FullUserType;
@@ -95,6 +98,7 @@ const RightBar: React.FC<RightBarProps> = ({ user, organizations }) => {
           ))
         )
       }
+      <TagList />
     </div>
   );
 };
