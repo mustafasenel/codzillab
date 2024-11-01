@@ -1,4 +1,4 @@
-"use clients"
+"use client"
 
 import { FullOrganizationType, FullUserType } from "@/types";
 import React from "react";

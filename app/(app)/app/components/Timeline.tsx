@@ -90,8 +90,10 @@ const Timeline: React.FC<TimelineProps> = ({ user }) => {
     );
   }
 
+
   return (
     <div className="w-full flex flex-col space-y-4">
+      
       {data.pages.map((page, pageIndex) => (
         <React.Fragment key={pageIndex}>
           {page.map((post, postIndex) => (

@@ -2,8 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { FullPostType } from "@/types";
 import { User } from "@prisma/client";
@@ -15,24 +14,17 @@ import {
   isWithinInterval,
   subWeeks,
 } from "date-fns";
-import { tr } from "date-fns/locale";
+import { da, tr } from "date-fns/locale";
 import {
-  ArrowDown,
-  ChevronDown,
+  Calendar,
+  CalendarClockIcon,
   ChevronDownIcon,
-  Forward,
-  Ghost,
-  Heart,
-  Medal,
   MessageSquareText,
   Pen,
   Pin,
   Send,
-  ThumbsUp,
   Trash2,
-  TriangleAlert,
   TriangleAlertIcon,
-  UserIcon,
   Zap,
 } from "lucide-react";
 import Image from "next/image";
@@ -52,13 +44,20 @@ import {
 import { getInitials } from "@/utils/getInitials"; // Fonksiyonu uygun yoldan import edin
 import PostItemModal from "./PostItemModal";
 import { formatText } from "@/utils/formatTag";
+import { Badge } from "@/components/ui/badge";
 
 interface PostItemProps {
   post: FullPostType;
   currentUser: User;
   ref: any;
 }
-
+export interface NotificationData {
+  userId: string |null; // Bildirimi alan kullanıcının ID'si
+  organizationId: string |null; // Bildirimi alan kullanıcının ID'si
+  type: "LIKE" | "COMMENT" | "MENTION"; // Bildirim türleri
+  postId?: string; // (isteğe bağlı) Post ile ilişkili ID
+  commentId?: string; // (isteğe bağlı) Yorum ile ilişkili ID
+}
 const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const [displayDate, setDisplayDate] = useState<string>("");
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
@@ -67,6 +66,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const queryClient = useQueryClient();
 
   const [isLiked, setIsLiked] = useState(false);
+  const [eventDate, setEventDate] = useState("");
 
   useEffect(() => {
     if (post.likes && Array.isArray(post.likes)) {
@@ -107,38 +107,67 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
       return response.data;
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["posts"] }); // Tüm postlar için sorguları durdur
+      // Define the keys you want to handle dynamically
+      const queryKeys = ["posts", "userPosts"];
 
-      // pages dizisini düz bir dizi haline getir
-      const prevPostsData = queryClient.getQueryData(["posts"]) as {
-        pages: FullPostType[][];
-      };
-      const allPosts = prevPostsData?.pages.flat() || []; // Düzleştirilmiş post dizisi
+      // Cancel any outgoing refetches for both "posts" and "userPosts" to prevent race conditions
+      await Promise.all(
+        queryKeys.map((key) => queryClient.cancelQueries({ queryKey: [key] }))
+      );
 
-      const prevPostData = allPosts.find((p) => p.id === post.id); // ID ile postu bul
+      // Store the previous like counts to revert if necessary
+      const prevData = queryKeys.map((key) => {
+        const data = queryClient.getQueryData<{ pages: FullPostType[][] }>([
+          key,
+        ]);
+        if (!data) return null;
 
-      if (!prevPostData) {
-        console.warn("Önceki veri bulunamadı, beğeni sayısı güncellenemedi");
-        return;
-      }
+        // Flatten the pages and find the post by id
+        const allPosts = data.pages.flat();
+        const targetPost = allPosts.find((p) => p.id === post.id);
 
-      const prevLikeCount = prevPostData.likesCount;
+        if (targetPost) {
+          const prevLikeCount = targetPost.likesCount;
 
-      // Beğeni durumu değişikliği
-      setLikeCount(isLiked ? prevLikeCount - 1 : prevLikeCount + 1);
-      setIsLiked(!isLiked);
+          // Optimistically update the like count
+          setLikeCount(isLiked ? prevLikeCount - 1 : prevLikeCount + 1);
+          setIsLiked(!isLiked);
 
-      return { prevLikeCount };
+          return { key, prevLikeCount };
+        }
+        return null;
+      });
+
+      // Return context with previous data for rollback in case of error
+      return { prevData };
     },
     onSuccess: () => {
-      // Başarılı olduğunda ilgili postun sorgusunu yenile
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-    onError: (error, variables, context) => {
-      if (context) {
-        setLikeCount(context.prevLikeCount);
+      const notificationData: NotificationData = {
+        userId: post.userId, // Beğeni alan kullanıcının ID'si
+        organizationId: post.organizationId,
+        type: "LIKE", // Bildirim tipi
+        postId: post.id, // Post ID
+      };
+
+      if (currentUser.id != post.userId && isLiked == true) {
+        notificationMutation.mutate(notificationData);
       }
-      console.error("Beğeni eklenirken hata:", error);
+      // Invalidate both queries to refetch fresh data
+      ["posts", "userPosts"].forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      });
+    },
+
+    onError: (error, variables, context) => {
+      if (context?.prevData) {
+        // Revert like counts for both "posts" and "userPosts" if they exist in the context
+        context.prevData.forEach((item) => {
+          if (item) {
+            setLikeCount(item.prevLikeCount);
+          }
+        });
+      }
+      console.error("Error while liking the post:", error);
     },
   });
 
@@ -194,50 +223,77 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
 
   const updateCommentStatusMutation = useMutation({
     mutationFn: async () => {
-        const response = await axios.put(`/api/post/update/commentStatus`, {
-          postId: post.id,
-        });
-        return response.data;
+      const response = await axios.put(`/api/post/update/commentStatus`, {
+        postId: post.id,
+      });
+      return response.data;
     },
     onMutate: async () => {
-        await queryClient.cancelQueries({ queryKey: ["posts"] });
-        
-        const prevPostsData = queryClient.getQueryData<{ pages: FullPostType[][] }>(["posts"]);
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
 
-        if (!prevPostsData) {
-            return; 
-        }
+      const prevPostsData = queryClient.getQueryData<{
+        pages: FullPostType[][];
+      }>(["posts"]);
 
-        // Güncellenen postu filtrele
-        const newPagesData = prevPostsData.pages.map(page =>
-            page.map(postItem => 
-                postItem.id === post.id ? { ...postItem, ...post } : postItem
-            )
-        );
+      if (!prevPostsData) {
+        return;
+      }
 
-        queryClient.setQueryData(["posts"], { 
-            ...prevPostsData, // Önceki verinin diğer alanlarını kopyala
-            pages: newPagesData // Sadece pages alanını güncelle
-        });
+      // Güncellenen postu filtrele
+      const newPagesData = prevPostsData.pages.map((page) =>
+        page.map((postItem) =>
+          postItem.id === post.id ? { ...postItem, ...post } : postItem
+        )
+      );
 
-        return { prevPostsData }; 
+      queryClient.setQueryData(["posts"], {
+        ...prevPostsData, // Önceki verinin diğer alanlarını kopyala
+        pages: newPagesData, // Sadece pages alanını güncelle
+      });
+
+      return { prevPostsData };
     },
     onError: (error, variables, context) => {
-        if (context?.prevPostsData) {
-            queryClient.setQueryData(["posts"], context.prevPostsData);
-        }
-        console.error("Post güncellenirken hata:", error);
+      if (context?.prevPostsData) {
+        queryClient.setQueryData(["posts"], context.prevPostsData);
+      }
+      console.error("Post güncellenirken hata:", error);
     },
-    onSuccess: () => { 
-        queryClient.invalidateQueries({ queryKey: ["posts"] }); 
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-});
+  });
 
-// Post güncelleme işlevi
-const handleCommentStatus = () => {
-  updateCommentStatusMutation.mutate(); // Güncelleme fonksiyonunu tetikle
-};
+  // Post güncelleme işlevi
+  const handleCommentStatus = () => {
+    updateCommentStatusMutation.mutate(); // Güncelleme fonksiyonunu tetikle
+  };
 
+  // Notification Mutation
+  const notificationMutation = useMutation<
+    NotificationData,
+    Error,
+    NotificationData
+  >({
+    mutationFn: async (notificationData: NotificationData) => {
+      const response = await axios.post(
+        `/api/notification/create`,
+        notificationData
+      );
+      return response.data;
+    },
+  });
+
+  useEffect(() => {
+    if (post.type === "EVENT") {
+      const formattedDate = format(
+        new Date(post.eventDate!),
+        "dd MMMM yyyy - HH.mm",
+        { locale: tr }
+      );
+      setEventDate(formattedDate);
+    }
+  }, [post]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const handleOpenImageModal = () => {
@@ -253,6 +309,14 @@ const handleCommentStatus = () => {
           <div className="px-4 text-sm flex gap-3 items-center text-white font-semibold">
             <Zap />
             <p>Sponsorlu</p>
+          </div>
+        </div>
+      )}
+      {post.type === "EVENT" && (
+        <div className="h-8 p-0 bg-[#322eff] rounded-t-md flex items-center ">
+          <div className="px-4 text-sm flex gap-3 items-center text-white font-semibold">
+            <CalendarClockIcon />
+            <p>Etkinlik</p>
           </div>
         </div>
       )}
@@ -296,7 +360,6 @@ const handleCommentStatus = () => {
             )}
           </div>
         </Link>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost">
@@ -319,9 +382,16 @@ const handleCommentStatus = () => {
                     <Trash2 className="h-4 w-4" />
                     <span>Postu Sil</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={handleCommentStatus}>
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={handleCommentStatus}
+                  >
                     <MessageSquareText className="h-4 w-4" />
-                    <span>{post.commentStatus === "ACTIVE" ? "Yorumları Kapat" : "Yorumları Aç"}</span>
+                    <span>
+                      {post.commentStatus === "ACTIVE"
+                        ? "Yorumları Kapat"
+                        : "Yorumları Aç"}
+                    </span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
@@ -347,10 +417,10 @@ const handleCommentStatus = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <CardContent className="flex flex-col space-y-4 p-0 pb-4">
+      <CardContent className="flex flex-col p-0 pb-4">
         <p className="px-4 text-sm"> {formatText(post.content)}</p>
         <div
-          className={`grid gap-2 cursor-pointer ${
+          className={`relative grid gap-2 cursor-pointer pt-4 ${
             post.attachments?.length === 1
               ? "grid-cols-1"
               : post.attachments?.length === 2
@@ -372,7 +442,16 @@ const handleCommentStatus = () => {
             </div>
           ))}
         </div>
-        <div className="flex gap-4 items-center px-6">
+        {post.type === "EVENT" && (
+          <div className="flex flex-col gap-3 px-4 bg-gradient-to-r from-slate-100 to-slate-300 dark:bg-gradient-to-r dark:from-slate-900 dark:to-slate-700 ">
+            <h1 className="text-xl font-semibold pt-4">{post.eventName}</h1>
+            <div className="flex items-center space-x-4 pb-4">
+              <Calendar />
+              <span className="text-sm">{eventDate}</span>
+            </div>
+          </div>
+        )}
+        <div className="flex gap-4 items-center px-6 pt-4">
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleLikeClick}>
               {isLiked ? (

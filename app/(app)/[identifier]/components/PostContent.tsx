@@ -26,8 +26,6 @@ const PostContent: React.FC<PostContentProps> = ({ user, currentUser }) => {
         userId = user.id
     } else if (isFullOrganizationType(user)) {
       organizationId = user.id
-    } else {
-      console.log("İKİ TÜRDE DE DEĞİL")
     }
     const response = await fetch(
       `/api/post/getUserPosts?skip=${pageParam}&take=${take}&userId=${userId}&organizationId=${organizationId}`
@@ -63,7 +61,7 @@ const PostContent: React.FC<PostContentProps> = ({ user, currentUser }) => {
     isFetchingNextPage,
     isLoading,
   } = useInfiniteQuery<FullPostType[], Error>({
-    queryKey: ["posts"],
+    queryKey: ["userPosts"],
     queryFn: fetchPosts,
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.length === 10 ? allPages.length * 10 : undefined; // Eğer son sayfa 10 post içeriyorsa, bir sonraki sayfa parametresi döndür

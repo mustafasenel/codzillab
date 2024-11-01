@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Bell, UserPlus, UserPlus2 } from "lucide-react";
 import { FullFriendRequestType, FullUserType } from "@/types";
 import FriendRequests from "./NavbarComponents/FriendRequests";
+import Notification from "./NavbarComponents/Notification";
 
 interface NavbarProps {
   user?: FullUserType;
@@ -90,7 +91,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="min-w-80 h-80">
+            <DropdownMenuContent align="end" className="min-w-80 h-80 p-0">
               <DropdownMenuLabel>
               <div className="flex items-center gap-4">
                   <Bell />
@@ -99,10 +100,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
               </DropdownMenuLabel>
               <Separator />
               {/* Bildirimler burada listelenecek */}
-              <div className="flex items-center justify-center w-full h-full">
-                <p className="text-muted-foreground text-sm">
-                  Henüz bildiriminiz yok
-                </p>
+              <div className="flex w-full h-full p-0">
+              <Notification />
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

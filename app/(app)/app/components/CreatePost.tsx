@@ -12,10 +12,8 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
-  FormMessage,
+
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useEdgeStore } from "@/lib/edgestore";
 import { cn } from "@/lib/utils";
@@ -30,6 +28,7 @@ import { z } from "zod";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { CreateEventModal } from "./CreateEventModal";
 
 const PostFormSchema = z.object({
   content: z.string().min(1, "Post boş olamaz"),
@@ -64,6 +63,12 @@ const CreatePost: React.FC<CreatePostProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [rows, setRows] = useState(1);
   const [openImageUpload, setOpenImageUpload] = useState(false);
+
+  const [isOpenEventModal, setIsOpenEventModal] = useState(false);
+
+  const handleOpenEventModal = () => setIsOpenEventModal(true);
+  const handleCloseEventModal = () => setIsOpenEventModal(false);
+
 
   const handleFocus = () => {
     setRows(4);
@@ -313,7 +318,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
                     <Video size={20} />
                     <span className="md:flex hidden">Video Yükle</span>
                   </Button>
-                  <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button">
+                  <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button" onClick={handleOpenEventModal}>
                     <CalendarClock size={20} />
                     <span className="md:flex hidden">Etkinlik Oluştur</span>
                   </Button>
@@ -323,6 +328,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
           </Card>
         </form>
       </Form>
+      <CreateEventModal isOpen={isOpenEventModal} onClose={handleCloseEventModal} userId_organizationId={getValues("userId_organizationId")}/>
     </div>
   );
 };

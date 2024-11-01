@@ -1,6 +1,7 @@
 import getCurrentUser from "@/actions/getCurrentUser";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prismadb";
+import { PostType } from "@prisma/client";
 
 export async function POST(request: Request) {
     try {
@@ -10,7 +11,15 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { content, attachments, isOrganization, userId_organizationId } = body;
+        const { content, attachments, isOrganization, userId_organizationId, location, type, eventName, eventDate } = body;
+
+        let postType;
+
+        if (type != "EVENT") {
+            postType = PostType.POST
+        } else {
+            postType = PostType.EVENT
+        }
 
         // 1. Tag'leri ayır
         const tags: string[] = content.match(/#\w+/g) || []; // # ile başlayan kelimeleri al
@@ -40,11 +49,19 @@ export async function POST(request: Request) {
         if (isOrganization) {
             newPostData = {
                 content,
+                eventName,
+                eventDate,
+                location,
+                type: postType,
                 organizationId: userId_organizationId,
             };
         } else {
             newPostData = {
                 content,
+                eventName,
+                eventDate,
+                location,
+                type: postType,
                 userId: currentUser.id,
             };
         }

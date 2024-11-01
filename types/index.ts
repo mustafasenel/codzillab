@@ -7,6 +7,7 @@ import {
   GameBody,
   Like,
   Media,
+  Notification,
   Organization,
   OrganizationFollower,
   OrganizationMember,
@@ -65,4 +66,9 @@ export type FullCommentType = Comment & {
 
 export type FullTagType = Tag & {
   posts: PostTag[] 
+}
+
+export type FullNotificationType = Notification & {
+  post: Post;
+  actor: User
 }

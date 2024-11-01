@@ -102,16 +102,13 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
     refetch();
   };
   return (
-    <div className="h-[calc(100vh-150px)]">
+    <div className="">
       <div
         className={cn(
-          isScrolled
-            ? "transition-all duration-500 h-0 opacity-0"
-            : "transition-all duration-500 h-auto opacity-100",
           "overflow-hidden flex flex-col gap-2"
         )}
       >
-        <ScrollArea className="transition-all duration-300">
+        <ScrollArea className="transition-all duration-300 max-w-5xl">
           {games && games.length > 0 ? (
             <div className="pb-4 ">
               <div className="flex space-x-4">
@@ -184,10 +181,8 @@ const BrowseContent: React.FC<BrowseContentProps> = ({ user, games }) => {
       </div>
       <div
         className={cn(
-          isScrolled ? "h-[calc(100vh-160px)] " : "h-[calc(100vh-400px)]",
           "overflow-y-auto transition-all duration-300"
         )}
-        onScroll={handleScroll}
       >
         <div className="py-4 flex flex-col">
           <div className="grid md:grid-cols-2 grid-cols-1 gap-4 pr-3">
