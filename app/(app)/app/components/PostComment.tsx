@@ -50,7 +50,9 @@ const PostComment: React.FC<PostCommentProps> = ({ post, currentUser }) => {
         content: form.getValues("comment")
       };
 
-      notificationMutation.mutate(notificationData);
+      if (currentUser.id != post.userId) {
+        notificationMutation.mutate(notificationData);
+      }
       // Yeni yorum gönderildikten sonra yorum sorgusunu geçersiz kıl
       queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
       form.reset(); // Formu sıfırla
