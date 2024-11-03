@@ -72,3 +72,12 @@ export type FullNotificationType = Notification & {
   post: Post;
   actor: User
 }
+
+export interface NotificationData {
+  userId: string |null; // Bildirimi alan kullanıcının ID'si
+  organizationId: string |null; // Bildirimi alan kullanıcının ID'si
+  type: "LIKE" | "COMMENT" | "MENTION"; // Bildirim türleri
+  content?:string;
+  postId?: string; // (isteğe bağlı) Post ile ilişkili ID
+  commentId?: string; // (isteğe bağlı) Yorum ile ilişkili ID
+}

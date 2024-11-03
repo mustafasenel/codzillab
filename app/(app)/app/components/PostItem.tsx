@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { FullPostType } from "@/types";
+import { FullPostType, NotificationData } from "@/types";
 import { User } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import PostComment from "./PostComment";
 import PostCommentList from "./PostCommentList";
 import { FaRegThumbsUp, FaThumbsUp } from "react-icons/fa";
@@ -44,21 +44,18 @@ import {
 import { getInitials } from "@/utils/getInitials"; // Fonksiyonu uygun yoldan import edin
 import PostItemModal from "./PostItemModal";
 import { formatText } from "@/utils/formatTag";
-import { Badge } from "@/components/ui/badge";
+import { PostEditModal } from "./PostEditModal";
 
 interface PostItemProps {
   post: FullPostType;
   currentUser: User;
   ref: any;
 }
-export interface NotificationData {
-  userId: string |null; // Bildirimi alan kullanıcının ID'si
-  organizationId: string |null; // Bildirimi alan kullanıcının ID'si
-  type: "LIKE" | "COMMENT" | "MENTION"; // Bildirim türleri
-  postId?: string; // (isteğe bağlı) Post ile ilişkili ID
-  commentId?: string; // (isteğe bağlı) Yorum ile ilişkili ID
-}
-const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
+const PostItem = forwardRef<HTMLDivElement, PostItemProps>(function PostItem(
+  { post, currentUser },
+  ref
+) {
+
   const [displayDate, setDisplayDate] = useState<string>("");
   const [isCommentSectionOpen, setIsCommentSectionOpen] = useState(false);
 
@@ -67,6 +64,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
 
   const [isLiked, setIsLiked] = useState(false);
   const [eventDate, setEventDate] = useState("");
+  const [monthAbbreviation, setMonthAbbreviation] = useState("");
+  const [dayNumber, setDayNumber] = useState("");
 
   useEffect(() => {
     if (post.likes && Array.isArray(post.likes)) {
@@ -292,8 +291,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         { locale: tr }
       );
       setEventDate(formattedDate);
+      // Ayın kısaltmasını ve günü al
+      const monthAbbr = format(new Date(post.eventDate!), "MMM", {
+        locale: tr,
+      });
+      const dayNum = format(new Date(post.eventDate!), "dd");
+
+      setMonthAbbreviation(monthAbbr);
+      setDayNumber(dayNum);
     }
   }, [post]);
+
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const handleOpenImageModal = () => {
@@ -302,6 +310,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
   const handleCloseImageModal = () => {
     setIsImageModalOpen(false);
   };
+  
+  // POST EDIT MODAL
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleOpenEditModal = () => {
+    setIsEditModalOpen(true);
+  };
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+  };
+  
   return (
     <Card className={cn(post.isPromoted && "border-[2px] border-[#FFA412]")}>
       {post.isPromoted && (
@@ -316,7 +335,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         <div className="h-8 p-0 bg-[#322eff] rounded-t-md flex items-center ">
           <div className="px-4 text-sm flex gap-3 items-center text-white font-semibold">
             <CalendarClockIcon />
-            <p>Etkinlik</p>
+            <p>{post.eventName}</p>
           </div>
         </div>
       )}
@@ -371,7 +390,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
             post.organization?.ownerId === currentUser.id ? (
               <>
                 <DropdownMenuGroup>
-                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer" onClick={handleOpenEditModal}>
                     <Pen className="h-4 w-4" />
                     <span>Postu Düzenle</span>
                   </DropdownMenuItem>
@@ -441,6 +460,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
               />
             </div>
           ))}
+          {post.type === "EVENT" && (
+            <div className="absolute flex items-center justify-center flex-col -bottom-10 right-10 bg-slate-800 rounded-lg p-2">
+              <h1 className="text-2xl text-muted-foreground">
+                {monthAbbreviation}
+              </h1>
+              <h1 className="text-3xl font-semibold">{dayNumber}</h1>
+            </div>
+          )}
         </div>
         {post.type === "EVENT" && (
           <div className="flex flex-col gap-3 px-4 bg-gradient-to-r from-slate-100 to-slate-300 dark:bg-gradient-to-r dark:from-slate-900 dark:to-slate-700 ">
@@ -502,8 +529,16 @@ const PostItem: React.FC<PostItemProps> = ({ post, currentUser, ref }) => {
         onClose={handleCloseImageModal}
         currentUser={currentUser}
       />
+      <PostEditModal
+        post={post}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+      />
     </Card>
   );
-};
+});
+
+// Set displayName for debugging
+PostItem.displayName = "PostItem";
 
 export default PostItem;

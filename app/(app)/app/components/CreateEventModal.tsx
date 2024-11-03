@@ -45,6 +45,7 @@ import { tr } from "date-fns/locale";
 const PostEventFormSchema = z.object({
   content: z.string().min(1, "Post boş olamaz"),
   userId_organizationId: z.string(),
+  isOrganization: z.boolean(),
   attachments: z
     .array(
       z.object({
@@ -52,7 +53,7 @@ const PostEventFormSchema = z.object({
       })
     )
     .optional(),
-  eventName: z.string(),
+  eventName: z.string().min(1, "Etkinlik adı boş olamaz"),
   location: z.string(),
   eventDate: z.date(),
   eventTime: z.string().optional(),
@@ -67,12 +68,14 @@ interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId_organizationId: string;
+  isOrganization?: boolean;
 }
 
 export function CreateEventModal({
   isOpen,
   onClose,
   userId_organizationId,
+  isOrganization
 }: CreateEventModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -92,6 +95,8 @@ export function CreateEventModal({
   const { setValue, watch, reset, handleSubmit } = formEvent;
   setValue("type", "EVENT");
   setValue("userId_organizationId", userId_organizationId);
+  setValue("isOrganization", isOrganization ? isOrganization : false);
+
 
   const handleDeleteFile = async (file: string) => {
     if (file) {

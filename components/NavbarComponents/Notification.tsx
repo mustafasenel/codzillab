@@ -94,10 +94,10 @@ const Notification = () => {
           group.map((notification: FullNotificationType) => (
             <div
               key={notification.id} // Add a unique key for each notification
-              className="flex items-center gap-2 p-2 hover:cursor-pointer hover:dark:bg-slate-800 transition"
+              className="flex gap-2 p-2 hover:cursor-pointer hover:dark:bg-slate-800 transition"
               onClick={() => router.push(`/${notification.actor.username}`)}
             >
-              <div className="flex items-center">
+              <div className="flex">
                 <Avatar className="flex h-9 w-9 items-center justify-center space-y-0 border">
                   <AvatarImage
                     src={
@@ -110,23 +110,23 @@ const Notification = () => {
                   <AvatarFallback>JL</AvatarFallback>
                 </Avatar>
               </div>
-              <div className="flex flex-col space-y-2">
+              <div className="flex flex-col space-y-1">
                 <div className="flex space-x-2">
-                  <p className="font font-semibold text-sm">
+                  <p className="font font-semibold text-xs">
                     @{notification.actor.username}{" "}
                   </p>
                   {notification.type === "LIKE" ? (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate text-wrap">
                       {" "}
                       gönderini beğendi
                     </p>
                   ) : notification.type === "COMMENT" ? (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate text-wrap">
                       {" "}
                       gönderine yorum yaptı
                     </p>
                   ) : (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground truncate text-wrap">
                       {" "}
                       gönderiye tepki verdi
                     </p>
@@ -135,6 +135,13 @@ const Notification = () => {
                 <span className="text-muted-foreground text-xs">
                   {formatNotificationDate(new Date(notification.createdAt))}
                 </span>
+                {
+                  notification.type === "COMMENT" && (
+                    <span className="text-muted-foreground truncate text-wrap text-xs">
+                    {notification.content}
+                  </span>
+                  )
+                }
               </div>
             </div>
           ))

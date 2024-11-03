@@ -66,11 +66,11 @@ export default async function TimelineLayout({
   return (
 <div className="w-full h-screen overflow-y-auto ">
   <Navbar user={currentUser!} />
-  <div className="container mx-auto w-full h-full flex pt-6">
-    <aside className="md:w-60 w-fit sticky top-[90px] self-start h-full">
+  <div className="md:container mx-auto w-full h-full flex md:flex-row flex-col pt-6">
+    <aside className="md:w-60 w-fit md:fixed sticky top-[90px] self-start h-full">
       <SidebarNav items={sidebarNavItems} />
     </aside>
-    <main className="flex-1 px-2 md:px-4 mb-10 h-screen">
+    <main className="flex-1 md:ml-60 px-2 md:px-4 mb-10 h-screen">
       {children}
     </main>
   </div>

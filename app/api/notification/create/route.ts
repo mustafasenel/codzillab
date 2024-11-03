@@ -10,20 +10,16 @@ export async function POST(request: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
         const body = await request.json();
-        const { userId, type, postId, commentId } = body;
+        const { userId, type, postId, commentId, content } = body;
 
         let notificationType;
-        let content;
 
         if (type === 'LIKE') {
             notificationType = NotificationType.LIKE
-            content = `${currentUser.name} ${currentUser.surname} gönderini beğendi`
         } else if (type === 'COMMENT') {
             notificationType = NotificationType.COMMENT
-            content = `${currentUser.name} ${currentUser.surname} gönderine yorum yaptı`
         } else {
             notificationType = NotificationType.MENTION
-            content = `${currentUser.name} ${currentUser.surname} gönderiye atıfta bulundu`
         }
 
         const newNotification = await prisma.notification.create({

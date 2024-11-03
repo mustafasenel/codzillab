@@ -7,13 +7,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useEdgeStore } from "@/lib/edgestore";
 import { cn } from "@/lib/utils";
@@ -69,7 +63,6 @@ const CreatePost: React.FC<CreatePostProps> = ({
   const handleOpenEventModal = () => setIsOpenEventModal(true);
   const handleCloseEventModal = () => setIsOpenEventModal(false);
 
-
   const handleFocus = () => {
     setRows(4);
   };
@@ -124,42 +117,39 @@ const CreatePost: React.FC<CreatePostProps> = ({
 
   const { setValue, getValues, reset } = form;
 
-  useEffect(()=> {
+  useEffect(() => {
     if (isOrganization && identifier?.id) {
-      setValue("userId_organizationId", identifier?.id)
+      setValue("userId_organizationId", identifier?.id);
     } else {
-      setValue("userId_organizationId", user.id)
+      setValue("userId_organizationId", user.id);
     }
     setValue("isOrganization", isOrganization === true);
-  }, [identifier, user, isOrganization])
-
-
+  }, [identifier, user, isOrganization]);
 
   const mutation = useMutation({
     mutationFn: async (data: PostFormValues) => {
-      const response = await axios.post('/api/post/create', data);
+      const response = await axios.post("/api/post/create", data);
       return response.data;
     },
     onSuccess: () => {
       toast.success("Post oluşturuldu!");
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      queryClient.invalidateQueries({ queryKey: ['userPosts'] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
     },
     onError: () => {
       toast.error("An error occurred");
     },
     onSettled: () => {
-      reset(); 
-      setFileStates([]); 
-      setIsLoading(false); 
+      reset();
+      setFileStates([]);
+      setIsLoading(false);
     },
   });
   const onSubmit = (data: PostFormValues) => {
     mutation.mutate(data);
     setIsLoading(true);
-    setOpenImageUpload(false)
+    setOpenImageUpload(false);
   };
-
 
   // function onSubmit(data: PostFormValues) {
   //   try {
@@ -173,7 +163,7 @@ const CreatePost: React.FC<CreatePostProps> = ({
   //       })
   //       .finally(() => {
   //         setIsLoading(false);
- 
+
   //         setFileStates([])
   //       });
   //   } catch (error) {
@@ -241,7 +231,9 @@ const CreatePost: React.FC<CreatePostProps> = ({
                   />
                 </div>
                 <div>
-                  <Button type="submit" disabled={isLoading}>Gönder</Button>
+                  <Button type="submit" disabled={isLoading}>
+                    Gönder
+                  </Button>
                 </div>
               </div>
 
@@ -314,11 +306,20 @@ const CreatePost: React.FC<CreatePostProps> = ({
                     <Image size={20} />
                     <span className="md:flex hidden">Görsel Yükle</span>
                   </Button>
-                  <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button">
+                  <Button
+                    className="gap-2 hover:bg-primary-foreground"
+                    variant={"ghost"}
+                    type="button"
+                  >
                     <Video size={20} />
                     <span className="md:flex hidden">Video Yükle</span>
                   </Button>
-                  <Button className="gap-2 hover:bg-primary-foreground" variant={"ghost"} type="button" onClick={handleOpenEventModal}>
+                  <Button
+                    className="gap-2 hover:bg-primary-foreground"
+                    variant={"ghost"}
+                    type="button"
+                    onClick={handleOpenEventModal}
+                  >
                     <CalendarClock size={20} />
                     <span className="md:flex hidden">Etkinlik Oluştur</span>
                   </Button>
@@ -328,7 +329,12 @@ const CreatePost: React.FC<CreatePostProps> = ({
           </Card>
         </form>
       </Form>
-      <CreateEventModal isOpen={isOpenEventModal} onClose={handleCloseEventModal} userId_organizationId={getValues("userId_organizationId")}/>
+      <CreateEventModal
+        isOpen={isOpenEventModal}
+        onClose={handleCloseEventModal}
+        userId_organizationId={getValues("userId_organizationId")}
+        isOrganization={getValues("isOrganization")}
+      />
     </div>
   );
 };

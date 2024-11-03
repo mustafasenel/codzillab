@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FullPostType } from "@/types";
+import { FullPostType, NotificationData } from "@/types";
 import { User } from "@prisma/client";
 import { Send } from "lucide-react";
 import Link from "next/link";
@@ -42,11 +42,37 @@ const PostComment: React.FC<PostCommentProps> = ({ post, currentUser }) => {
       form.reset(); // Formu sıfırla
     },
     onSuccess: () => {
+      const notificationData: NotificationData = {
+        userId: post.userId, // Beğeni alan kullanıcının ID'si
+        organizationId: post.organizationId,
+        type: "COMMENT", // Bildirim tipi
+        postId: post.id, // Post ID
+        content: form.getValues("comment")
+      };
+
+      notificationMutation.mutate(notificationData);
       // Yeni yorum gönderildikten sonra yorum sorgusunu geçersiz kıl
       queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
       form.reset(); // Formu sıfırla
     },
   });
+
+
+   // Notification Mutation
+   const notificationMutation = useMutation<
+   NotificationData,
+   Error,
+   NotificationData
+ >({
+   mutationFn: async (notificationData: NotificationData) => {
+     const response = await axios.post(
+       `/api/notification/create`,
+       notificationData
+     );
+     return response.data;
+   },
+ });
+
 
   // Form gönderildiğinde çağrılacak fonksiyon
   const onSubmit = (data: CommentFormValues) => {

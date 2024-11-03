@@ -91,7 +91,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="min-w-80 h-80 p-0">
+            <DropdownMenuContent align="end" className="w-80 p-0">
               <DropdownMenuLabel>
               <div className="flex items-center gap-4">
                   <Bell />
@@ -100,7 +100,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
               </DropdownMenuLabel>
               <Separator />
               {/* Bildirimler burada listelenecek */}
-              <div className="flex w-full h-full p-0">
+              <div className="flex w-full p-0 overflow-y-auto h-80 ">
               <Notification />
               </div>
             </DropdownMenuContent>
