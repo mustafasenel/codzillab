@@ -18,6 +18,7 @@ interface PostCommentProps {
   currentUser: User;
 }
 
+
 const CommentFormSchema = z.object({
   comment: z.string().min(1, "Yorum boş olamaz"),
   postId: z.string(),
