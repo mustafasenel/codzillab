@@ -21,7 +21,7 @@ export async function PUT(request: Request) {
         });
 
         // Check if the post exists and belongs to the current user
-        if (!existingPost || (existingPost.userId !== currentUser.id && !isOrganization)) {
+        if (!existingPost || (existingPost?.userId && existingPost.userId !== currentUser.id)) {
             return new NextResponse('Unauthorized', { status: 403 });
         }
 
@@ -56,7 +56,6 @@ export async function PUT(request: Request) {
             eventDate,
             location,
             type: postType,
-            ...(isOrganization ? { organizationId: userId_organizationId } : { userId: currentUser.id }),
         };
 
         // 4. Postu güncelle
