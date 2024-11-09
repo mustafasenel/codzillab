@@ -63,6 +63,12 @@ export async function PUT(request: Request) {
         const updatedPost = await prisma.post.update({
             where: { id: postId },
             data: updatedPostData,
+            include: {
+                attachments: true,
+                user: true,
+                organization: true,
+                likes:true
+            },
         });
 
         // 5. Attachments güncelleme
@@ -75,14 +81,15 @@ export async function PUT(request: Request) {
                 (attachment: any) => !existingAttachments.includes(attachment.url)
             );
 
-            // 5.3 Yeni attachments'ları veritabanına ekle
-            await prisma.media.createMany({
-                data: newAttachmentsToAdd.map((attachment: any) => ({
-                    postId: updatedPost.id,
-                    type: MediaType.IMAGE, // Assuming all attachments are images
-                    url: attachment.url,
-                })),
-            });
+            if (newAttachmentsToAdd.length > 0) {
+                await prisma.media.createMany({
+                    data: newAttachmentsToAdd.map((attachment: any) => ({
+                        postId: updatedPost.id,
+                        type: MediaType.IMAGE, // Assuming all attachments are images
+                        url: attachment.url,
+                    })),
+                });
+            }
         }
 
         // 6. Post ile tag'leri ilişkilendirme

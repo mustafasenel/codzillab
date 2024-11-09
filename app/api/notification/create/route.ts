@@ -13,13 +13,18 @@ export async function POST(request: Request) {
         const { userId, type, postId, commentId, content } = body;
 
         let notificationType;
+        let notificationContent;
+
 
         if (type === 'LIKE') {
             notificationType = NotificationType.LIKE
+            notificationContent= "liked"
         } else if (type === 'COMMENT') {
             notificationType = NotificationType.COMMENT
+            notificationContent = content
         } else {
             notificationType = NotificationType.MENTION
+            notificationContent = content
         }
 
         const newNotification = await prisma.notification.create({
@@ -29,7 +34,7 @@ export async function POST(request: Request) {
                 type: notificationType,
                 postId: postId,
                 commentId: commentId,
-                content
+                content:notificationContent
             }
         })
 
