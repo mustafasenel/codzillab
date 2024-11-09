@@ -86,7 +86,7 @@ const PostComment: React.FC<PostCommentProps> = ({ post, currentUser }) => {
     <div className="w-full gap-4 flex">
       <Link
         href={
-          post.user ? `/${post.user.username}` : `/${post?.organization?.slug}`
+          post.user ? `/${post?.user?.username}` : `/${post?.organization?.slug}`
         }
         className="flex items-center space-x-4"
       >

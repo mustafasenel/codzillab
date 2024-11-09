@@ -343,7 +343,7 @@ const PostItem = forwardRef<HTMLDivElement, PostItemProps>(function PostItem(
         <Link
           href={
             post.user
-              ? `/${post.user.username}`
+              ? `/${post?.user?.username}`
               : `/${post?.organization?.slug}`
           }
           className="flex items-center space-x-4"
@@ -375,7 +375,7 @@ const PostItem = forwardRef<HTMLDivElement, PostItemProps>(function PostItem(
             </div>
 
             {post.user && (
-              <span className="text-xs font-light">@{post.user.username}</span>
+              <span className="text-xs font-light">@{post?.user?.username}</span>
             )}
           </div>
         </Link>
