@@ -198,7 +198,7 @@ const PostItemModal: React.FC<PostItemModalProps> = ({
 
                   {post.user && (
                     <span className="text-xs font-light">
-                      @{post.user.username}
+                      @{post.user?.username}
                     </span>
                   )}
                 </div>

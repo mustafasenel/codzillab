@@ -42,7 +42,7 @@ const RightBar: React.FC<RightBarProps> = ({ user, organizations }) => {
           />
         </div>
         <div className="flex flex-col items-center space-y-2 py-6">
-          <Link href={`/${user.username}`} className="text-xl hover:underline">
+          <Link href={user ? `/${user?.username}` : "/app"} className="text-xl hover:underline">
             {user?.name} {user?.surname}
           </Link>
           <h2 className="text-muted-foreground">@{user?.username}</h2>

@@ -91,7 +91,7 @@ const PostCommentItem: React.FC<PostCommentItemProps> = ({
 
             {comment.user && (
               <span className="text-xs font-light">
-                @{comment.user.username}
+                @{comment.user?.username}
               </span>
             )}
           </div>
