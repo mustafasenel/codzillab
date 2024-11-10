@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { TagIcon, TrendingUp } from 'lucide-react'; // LucideReact ikonları
+import { Hash, TagIcon, TrendingUp } from 'lucide-react'; // LucideReact ikonları
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag } from '@prisma/client';
@@ -44,10 +44,10 @@ const TagList = () => {
                         {tags.map(tag => (
                             <li key={tag.id} className="flex gap-4">
                                 <div className='flex items-center justify-center bg-secondary p-2 rounded-md'>
-                                    <TrendingUp className='w-4 h-4'/>
+                                    <Hash className='w-4 h-4'/>
                                 </div>
                                 <div className='flex flex-col items-start justify-center'>
-                                    <span className="text-sm">#{tag.name}</span>
+                                    <span className="text-sm">{tag.name}</span>
                                     <span className='text-muted-foreground text-xs'>{`${tag.posts.length} post`}</span>
 
                                 </div>

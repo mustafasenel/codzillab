@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items: {
@@ -19,10 +18,7 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
 
   return (
     <nav
-      className={cn(
-        "flex flex-col space-y-2 pl-2 md:pl-0",
-        className
-      )}
+      className={cn("flex flex-col pl-2 md:pl-0 space-y-2", className)}
       {...props}
     >
       {items.map((item) => (
@@ -30,18 +26,14 @@ export function SidebarNav({ className, items, ...props }: SidebarNavProps) {
           key={item.href}
           href={item.href}
           className={cn(
-            buttonVariants({ variant: "ghost" }),
             pathname === item.href
-              ? "bg-muted hover:bg-muted"
-              : "hover:bg-transparent hover:underline",
-            "justify-start flex items-center gap-4"
+              ? "bg-gradient-to-r from-slate-800 to-slate-500 text-white shadow-lg"
+              : " hover:bg-gray-100 dark:hover:bg-gray-800",
+            "flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105"
           )}
         >
-          <div>{item.icon}</div>
-          <span className="hidden md:flex">
-
-          {item.title}
-          </span>
+          <div className="text-lg">{item.icon}</div>
+          <span className="text-sm font-medium md:flex hidden">{item.title}</span>
         </Link>
       ))}
     </nav>

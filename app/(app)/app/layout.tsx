@@ -39,27 +39,27 @@ export default async function TimelineLayout({
     {
       title: "Ana Sayfa",
       href: `/app`,
-      icon: <Home className="h-6 w-6" />,
+      icon: <Home className="h-6 w-6 text-[#E7243A]" />
     },
     {
       title: "Oyunlar",
       href: `/app/games`,
-      icon: <Gamepad2 className="h-6 w-6" />,
+      icon: <Gamepad2 className="h-6 w-6 text-[#E7243A]" />,
     },
     {
       title: "Oyun Arkadaşı",
       href: `/app/friend-requests`,
-      icon: <Users className="h-6 w-6" />,
+      icon: <Users className="h-6 w-6 text-[#E7243A]" />,
     },
     {
       title: "Sayfalar",
       href: `/app/organizations`,
-      icon: <Building className="h-6 w-6" />,
+      icon: <Building className="h-6 w-6 text-[#E7243A]" />,
     },
     {
       title: "Arkadaş Bul",
       href: `/app/friends`,
-      icon: <UserPlus2 className="h-6 w-6" />,
+      icon: <UserPlus2 className="h-6 w-6 text-[#E7243A]" />,
     },
   ];
 
