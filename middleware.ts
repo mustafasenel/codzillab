@@ -65,5 +65,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/app/:path*", "/admin/:path*", "/authentication/:path*"],
+  matcher: ["/app/:path*", "/admin/:path*", "/chat/:path*", "/authentication/:path*"],
 };

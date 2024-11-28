@@ -167,9 +167,6 @@ const UserCard = forwardRef<HTMLDivElement, UserCardProps>(function UserCard(
           {user.name} {user.surname}
         </Link>
         <p className="text-sm text-muted-foreground">@{user.username}</p>
-        <p className="text-muted-foreground text-sm">
-          {user?.followings?.length} takipçi
-        </p>
         <Separator />
         <div className="pt-2">
           <Button

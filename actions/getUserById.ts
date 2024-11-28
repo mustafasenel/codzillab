@@ -20,6 +20,12 @@ const getUserById = async (username: string): Promise<FullUserType | null> => {
             requester: true,
           },
         },
+        UserGames: {
+          include: {
+            game: true,
+            user: true,
+          },
+        },
       },
     });
 

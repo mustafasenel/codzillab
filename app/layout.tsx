@@ -10,8 +10,8 @@ import TanstackProvider from "@/context/QueryClientProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Codzillab",
-  description: "Codzillab",
+  title: "Levelhaus",
+  description: "Levelhaus",
 };
 
 export default function RootLayout({

@@ -73,6 +73,12 @@ model User {
 
   notifications   Notification[] @relation("NotificationReceiver") // Kullanıcının aldığı bildirimler
   actions         Notification[] @relation("NotificationActor")    // Kullanıcının tetiklediği bildirimler
+
+  //////////////  REALTIME CHAT SECTION //////////////////
+
+  servers  Server[] @relation("UserServers")
+  members  Member[] @relation("UserMembers")
+  channels Channel[] @relation("UserChannels")
 }
 
 model Account {
@@ -342,4 +348,73 @@ model Notification {
 
   @@index([userId])
   @@index([actorId])
+}
+
+
+////////////////////////////////////////////////////////////////// REALTIME MESSAGE CHAT SECTION ////////////////////////////////////////////////////////////////////////
+
+model Server {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  imageUrl  String
+  inviteCode String
+
+  profileId String @db.ObjectId
+  profile   User @relation("UserServers", fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members Member[] @relation("ServerMembers")
+  channels Channel[] @relation("ServerChannels")
+
+
+  @@index([profileId])
+}
+
+enum MemnerRole {
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+model Member {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  role MemnerRole @default(GUEST)
+
+  profileId  String @db.ObjectId
+  profile    User @relation("UserMembers", fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId  String @db.ObjectId
+  server    Server @relation("ServerMembers", fields: [serverId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([serverId])
+}
+
+enum ChanelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+
+model Channel {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      ChanelType @default(TEXT)
+
+  profileId  String @db.ObjectId
+  profile    User @relation("UserChannels", fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId  String @db.ObjectId
+  server    Server @relation("ServerChannels", fields: [serverId], references: [id], onDelete: Cascade)
+
+  createdAd DateTime @default(now())
+  updatedAd DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([serverId])
 }

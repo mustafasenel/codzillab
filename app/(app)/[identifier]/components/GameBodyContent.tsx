@@ -19,7 +19,7 @@ const GameBodyContent:React.FC<GameBodyContentProps> = ({ user, userGameBodyAdve
         ) : (
             <Card className='md:h-60 h-32 flex items-center justify-center'> 
                 <CardContent>
-                    <p className='text-muted-foreground'>Arkadaşlık ilanı bulunmamaktadır{userGameBodyAdverts?.length}</p>
+                    <p className='text-muted-foreground'>Arkadaşlık ilanı bulunmamaktadır</p>
                 </CardContent>
             </Card>
         )
