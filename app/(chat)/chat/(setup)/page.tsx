@@ -18,7 +18,7 @@ const SetupPage = async () => {
     });
     
     if (server) {
-        return redirect(`/chat/${server.id}`)
+        return redirect(`/chat/servers/${server.id}`)
     }
 
     return <div>

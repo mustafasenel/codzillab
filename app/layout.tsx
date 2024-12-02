@@ -7,6 +7,7 @@ import ToasterContext from "@/context/ToasterContext";
 import AuthContext from "@/context/AuthContext";
 import { EdgeStoreProvider } from "@/lib/edgestore";
 import TanstackProvider from "@/context/QueryClientProvider";
+import ModalProvider from "./(chat)/chat/components/providers/modal-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -30,7 +31,11 @@ export default function RootLayout({
         >
           <AuthContext>
             <EdgeStoreProvider>
-              <TanstackProvider>{children}</TanstackProvider>
+              <TanstackProvider>
+                {children}
+                {/* Modal Provider Chat bölümü için */}
+                <ModalProvider /> 
+              </TanstackProvider>
             </EdgeStoreProvider>
           </AuthContext>
           <ToasterContext />

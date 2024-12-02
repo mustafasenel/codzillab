@@ -7,12 +7,14 @@ import {
   GameBody,
   Like,
   Media,
+  Member,
   Notification,
   Organization,
   OrganizationFollower,
   OrganizationMember,
   Post,
   PostTag,
+  Server,
   Tag,
   User,
   UserGame,
@@ -80,4 +82,8 @@ export interface NotificationData {
   content?:string;
   postId?: string; // (isteğe bağlı) Post ile ilişkili ID
   commentId?: string; // (isteğe bağlı) Yorum ile ilişkili ID
+}
+
+export type ServerWithMembersWithProfiles = Server & {
+  members: (Member & { profile: User })[];
 }
