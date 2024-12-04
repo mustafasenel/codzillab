@@ -27,6 +27,7 @@ import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, {
@@ -42,9 +43,10 @@ const formSchema = z.object({
 
 const CreateChannelModal = () => {
 
-  const { isOpen, onClose, type } = useModal();
+  const { isOpen, onClose, type, data } = useModal();
 
   const isModalOpen = isOpen && type ==  "createChannel";
+  const { channelType } = data;
 
   const router = useRouter();
   const params = useParams()
@@ -53,9 +55,17 @@ const CreateChannelModal = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      type: ChanelType.TEXT
+      type: channelType ||ChanelType.TEXT
     },
   });
+
+  useEffect(() => {
+    if (channelType) {
+      form.setValue("type", channelType)
+    } else {
+      form.setValue("type", ChanelType.TEXT)
+    }
+  }, [channelType])
 
   const isLoading = form.formState.isSubmitting;
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
