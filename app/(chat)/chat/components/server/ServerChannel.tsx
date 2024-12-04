@@ -5,6 +5,7 @@ import { ChanelType, Channel, MemnerRole, Server } from "@prisma/client";
 import { Edit, Hash, Lock, Mic, Trash, Video } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import ActionTooltip from "../ActionTooltip";
+import { ModalType, useModal } from "@/hooks/use-modal";
 
 interface ServerChannelProps {
   channel: Channel;
@@ -19,24 +20,36 @@ const iconMap = {
 };
 
 const ServerChannel = ({ channel, server, role }: ServerChannelProps) => {
+  const { onOpen } = useModal()
+
   const params = useParams();
   const router = useRouter();
 
   const Icon = iconMap[channel.type];
+
+  const onClick = () => {
+    router.push(`/chat/servers/${params?.serverId}/channels/${channel.id}`);
+  }
+
+  const onAction = (e: React.MouseEvent, action: ModalType) => {
+    e.stopPropagation();
+    onOpen(action);
+  }
+
   return (
     <button
-    onClick={() => {}}
+    onClick={onClick}
       className={cn(
         "group px-2 py-2 rounded-md text-muted-foreground flex items-center gap-x-2 w-full transition mb-1 dark:hover:bg-slate-800/50 hover:bg-slate-300/50",
         params?.channelId === channel.id &&
-          "bg-slate-700/50 dark:bg-slate-500/50"
+          "dark:bg-slate-800/60 bg-slate-300/60"
       )}
     >
       <Icon className="flex-shrink-0 w-5 h-5 text-muted-foreground" />
       <p
         className={cn(
           "line-clamp-1 font-semibold text-sm transition dark:hover:text-white",
-          params?.channelId === channel.id && "text-primary"
+          params?.channelId === channel.id && "text-black dark:text-primary"
         )}
       >
         {channel.name}
@@ -44,10 +57,10 @@ const ServerChannel = ({ channel, server, role }: ServerChannelProps) => {
       {channel.name !== "general" && role !== MemnerRole.GUEST && (
         <div className="ml-auto flex items-center gap-x-2">
             <ActionTooltip label="Düzenle">
-                <Edit className="hidden group-hover:block w-4 h-4 text-muted-foreground transition"/>
+                <Edit className="hidden group-hover:block w-4 h-4 text-muted-foreground transition" onClick={(e) => onAction(e, "editChannel")}/>
             </ActionTooltip>
             <ActionTooltip label="Sil">
-                <Trash className="hidden group-hover:block w-4 h-4 text-muted-foreground transition"/>
+                <Trash className="hidden group-hover:block w-4 h-4 text-muted-foreground transition" onClick={(e) => onAction(e, "deleteChannel")}/>
             </ActionTooltip>
         </div>
       )}

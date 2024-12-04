@@ -25,11 +25,16 @@ const ServerMember = ({ member, server }: ServerMemberProps) => {
 
   const icon = roleIconMap[member.role];
 
+  const onClick = () => {
+    router.push(`/chat/servers/${params?.serverId}/conversations/${member.id}`);
+  }
+
   return (
     <button
+    onClick={onClick}
       className={cn(
         "group px-2 py-2 rounded-md flex items-center gap-x-2 w-full transition mb-1 dark:hover:bg-slate-800/50 hover:bg-slate-300/50",
-        params?.memberId === member.id && "bg-slate-700/50 dark:bg-slate-500/50"
+        params?.memberId === member.id && "dark:bg-slate-800/60 bg-slate-300/60 "
       )}
     >
       <UserAvatar
@@ -42,7 +47,7 @@ const ServerMember = ({ member, server }: ServerMemberProps) => {
       />
       <p         className={cn(
           "line-clamp-1 font-semibold text-sm transition dark:hover:text-white",
-          params?.memberId === member.id && "text-primary"
+          params?.memberId === member.id && "text-black dark:text-primary"
         )}>
         {member.profile.name} {member.profile.surname} 
       </p>
