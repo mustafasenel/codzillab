@@ -20,6 +20,12 @@ import {
   UserGame,
 } from "@prisma/client";
 
+
+import { NextApiResponse } from "next";
+import { Server as NetServer, Socket } from "net";
+import { Server as SocketIOServer } from "socket.io";
+
+
 export type FullUserType = User & {
   account: Account[] | null;
   followers: Follower[] | null;
@@ -86,4 +92,12 @@ export interface NotificationData {
 
 export type ServerWithMembersWithProfiles = Server & {
   members: (Member & { profile: User })[];
+}
+
+export type NextApiResponeServerIo = NextApiResponse & {
+  socket: Socket & {
+    server: NetServer & {
+      io: SocketIOServer
+    }
+  }
 }

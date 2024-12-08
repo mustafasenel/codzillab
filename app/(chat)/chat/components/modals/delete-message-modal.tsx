@@ -13,33 +13,26 @@ import {
 import { useModal } from "@/hooks/use-modal";
 import axios from "axios";
 import qs from "query-string";
-import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-const DeleteChannelModal = () => {
+const DeleteMessageModal = () => {
   const { onOpen, isOpen, onClose, type, data } = useModal();
   const [isLoading, setIsLoading] = useState(false);
 
-  const isModalOpen = isOpen && type == "deleteChannel";
-  const { server, channel } = data;
+  const isModalOpen = isOpen && type == "deleteMessage";
+  const { apiUrl, query } = data;
 
-  const router = useRouter();
-  const params = useParams();
 
   const onClick = async() => {
     try {
       setIsLoading(true);
       const url = qs.stringifyUrl({
-        url: `/api/chat/channels/${channel?.id}`,
-        query: {
-          serverId: params?.serverId
-        }
+        url: apiUrl || "",
+        query
       })
       await axios.delete(url);
 
       onClose();
-      router.refresh()
-      router.push(`/chat/servers/${server?.id}`);
 
     } catch (error) {
       console.log(error)
@@ -51,14 +44,10 @@ const DeleteChannelModal = () => {
       <DialogContent className="p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-semibold">
-            Kanalı Sil
+            Mesajı Sil
           </DialogTitle>
           <DialogDescription className="text-center text-muted-foreground py-2">
-            <span className="font-semibold text-indigo-500">
-              #{channel?.name}
-            </span>
-            <span>{" "}</span>
-            kanalını gerçekten silmek istediğinize emin misiniz? 
+            Mesajı gerçekten silmek istediğinize emin misiniz? 
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="px-6 py-4">
@@ -75,7 +64,7 @@ const DeleteChannelModal = () => {
                 variant="destructive"
                 onClick={onClick}
               >
-                Kanalı Sil
+                Mesajı Sil
               </Button>
           </div>
         </DialogFooter>
@@ -84,4 +73,4 @@ const DeleteChannelModal = () => {
   );
 };
 
-export default DeleteChannelModal;
+export default DeleteMessageModal;

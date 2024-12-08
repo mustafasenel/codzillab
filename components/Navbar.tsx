@@ -228,18 +228,26 @@ const Navbar: React.FC<NavbarProps> = ({ user, organizations }) => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem>
                         <Link
-                          href={
+                          href={ pathname ? (
+
                             !pathname.includes("/admin")
                               ? "/admin/dashboard"
                               : "/app"
+                          ) : "/app"
                           }
                           className="flex items-center gap-2 cursor-pointer"
                         >
                           <MdAdminPanelSettings />
                           <span>
-                            {!pathname.includes("/admin")
-                              ? "Admin Sayfası"
-                              : "Uygulama Sayfası"}
+                            { pathname ? (
+
+                              !pathname.includes("/admin")
+                                ? "Admin Sayfası"
+                                : "Uygulama Sayfası"
+                            ) : (
+                              "Admin Sayfası"
+                            )
+                            }
                           </span>
                         </Link>
                       </DropdownMenuItem>

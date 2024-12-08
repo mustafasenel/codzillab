@@ -182,7 +182,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, title }) => {
                   {user?.role === "ADMIN" && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
+                      {/* <DropdownMenuItem>
                         <Link
                           href={
                             !pathname.includes("/admin") ? "/admin" : "/app"
@@ -196,7 +196,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, title }) => {
                               : "Uygulama Sayfası"}
                           </span>
                         </Link>
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                     </>
                   )}
                   <DropdownMenuSeparator />
