@@ -6,6 +6,8 @@ import ChatInput from "@/app/(chat)/chat/components/chat/ChatInput";
 import ChatMessages from "@/app/(chat)/chat/components/chat/ChatMessages";
 import { pusherClient } from "@/lib/pusher";
 import { PusherProvider } from "@/context/PusherProvider";
+import { ChanelType } from "@prisma/client";
+import MediaRoom from "@/app/(chat)/chat/components/media-room";
 
 interface ChannelIdPageProps {
   params: {
@@ -45,29 +47,53 @@ const ChannelIdPage = async ({ params }: ChannelIdPageProps) => {
           name={channel.name}
           type="channel"
         />
-        <ChatMessages
-          member={member}
-          chatId={channel.id}
-          name={channel.name}
-          type="channel"
-          apiUrl="/api/chat/messages"
-          socketUrl="/api/socket/messages"
-          socketQuery={{
-            channelId: channel.id,
-            serverId: channel.serverId,
-          }}
-          paramKey="channelId"
-          paramValue={channel.id}
-        />
-        <ChatInput
-          name={channel.name}
-          type="channel"
-          apiUrl="/api/socket/messages"
-          query={{
-            channelId: params.channelId,
-            serverId: channel.serverId,
-          }}
-        />
+        {channel.type === ChanelType.TEXT && (
+          <>
+            <ChatMessages
+              member={member}
+              chatId={channel.id}
+              name={channel.name}
+              type="channel"
+              apiUrl="/api/chat/messages"
+              socketUrl="/api/socket/messages"
+              socketQuery={{
+                channelId: channel.id,
+                serverId: channel.serverId,
+              }}
+              paramKey="channelId"
+              paramValue={channel.id}
+            />
+            <ChatInput
+              name={channel.name}
+              type="channel"
+              apiUrl="/api/socket/messages"
+              query={{
+                channelId: params.channelId,
+                serverId: channel.serverId,
+              }}
+            />
+          </>
+        )}
+        {
+          channel.type === ChanelType.AUDIO && (
+            <MediaRoom
+              chatId={channel.id}
+              video={false}
+              audio={true}
+              user={profile}
+            />
+          )
+        }
+                {
+          channel.type === ChanelType.VIDEO && (
+            <MediaRoom
+              chatId={channel.id}
+              video={true}
+              audio={true}
+              user={profile}
+            />
+          )
+        }
       </div>
     </PusherProvider>
   );
