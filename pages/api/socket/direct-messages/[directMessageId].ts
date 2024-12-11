@@ -11,64 +11,68 @@ export default async function handler(req: NextApiRequest, res: NextApiResponeSe
 
     try {
         const profile = await getCurrentUserPages(req,res);
-        const { messageId, serverId, channelId } = req.query;
+        const { directMessageId, conversationId } = req.query;
         const { content } = req.body;
         
         if (!profile) {
             return res.status(401).json({error: "Unauthorized"})
         }
 
-        if (!messageId) {
-            return res.status(400).json({error: "MessageId missing"})
+
+        if (!conversationId) {
+            return res.status(400).json({error: "Conversation ID missing"})
         }
 
-        if (!serverId) {
-            return res.status(400).json({error: "ServerID missing"})
+        if (!directMessageId) {
+            return res.status(400).json({error: "Direct Message ID missing"})
         }
 
-        if (!channelId) {
-            return res.status(400).json({error: "ChannelId missing"})
-        }
 
-        const server = await prismadb.server.findFirst({
+
+        const conversation = await prismadb.conversation.findFirst({
             where: {
-                id: serverId as string,
-                members: {
-                    some: {
-                        profileId: profile.id
+                id: conversationId as string,
+                OR: [
+                    {
+                        memberOne: {
+                            profileId: profile.id
+                        }
+                    },
+                    {
+                        memberTwo: {
+                            profileId: profile.id
+                        }
                     }
-                }
+                ]
             },
             include: {
-                members: true
+                memberOne: {
+                    include: {
+                        profile: true
+                    }
+                },
+                memberTwo: {
+                    include: {
+                        profile: true
+                    }
+                }
             }
         });
 
-        if (!server) {
-            return res.status(404).json({error: "Server not found"})
+        if (!conversation) {
+            return res.status(404).json({error: "Conversation not found"})
         }
 
-        const channel = await prismadb.channel.findFirst({
-            where: {
-                id: channelId as string,
-                serverId: server.id
-            }
-        });
-
-        if (!channel) {
-            return res.status(404).json({error: "Channel not found"})
-        }
-
-        const member = server.members.find((member) => member.profileId === profile.id);
+        const member = conversation.memberOne.profileId === profile.id ? conversation.memberOne : conversation.memberTwo
         
         if (!member) {
             return res.status(404).json({error: "Member not found"})
         }
 
-        let message = await prismadb.message.findFirst({
+        let directMessage = await prismadb.directMessage.findFirst({
             where: {
-                id: messageId as string,
-                channelId: channel.id
+                id: directMessageId as string,
+                conversationId: conversationId as string
             },
             include: {
                 member: {
@@ -79,11 +83,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponeSe
             }
         });
 
-        if (!message || message.deleted) {
+        if (!directMessage || directMessage.deleted) {
             return res.status(404).json({error: "Message not found"})
         }
 
-        const isMessageOwner = message.memberId === member.id;
+        const isMessageOwner = directMessage.memberId === member.id;
         const isAdmin = member.role === MemnerRole.ADMIN;
         const isModerator = member.role === MemnerRole.MODERATOR;
         const canModify = isMessageOwner || isAdmin || isModerator;
@@ -93,9 +97,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponeSe
         }
 
         if (req.method === "DELETE") {
-            message = await prismadb.message.update({
+            directMessage = await prismadb.directMessage.update({
                 where: {
-                    id: messageId as string
+                    id: directMessageId as string
                 },
                 data: {
                     fileUrl: null,
@@ -117,9 +121,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponeSe
                 return res.status(401).json({error: "Unauthorized"})
             }
     
-            message = await prismadb.message.update({
+            directMessage = await prismadb.directMessage.update({
                 where: {
-                    id: messageId as string
+                    id: directMessageId as string
                 },
                 data: {
                     content,
@@ -134,11 +138,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponeSe
             });
         }
 
-        const updateKey = `chat_${channelId}_messages_update`;
+        const updateKey = `chat_${conversation.id}_messages_update`;
 
-        res?.socket?.server?.io?.emit(updateKey, message);
+        res?.socket?.server?.io?.emit(updateKey, directMessage);
 
-        return res.status(200).json(message);
+        return res.status(200).json(directMessage);
     } catch (error) {
         console.log("[MESSAGE EDIT&DELETE]", error);
         return res.status(500).json({error: "Internal error"})
