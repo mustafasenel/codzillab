@@ -9,7 +9,6 @@ import { EdgeStoreProvider } from "@/lib/edgestore";
 import TanstackProvider from "@/context/QueryClientProvider";
 import ModalProvider from "./(chat)/chat/components/providers/modal-provider";
 import { SocketProvider } from "@/context/socket-provider";
-import { PusherProvider } from "@/context/PusherProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -32,6 +31,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthContext>
+            <SocketProvider>
               <EdgeStoreProvider>
                 <TanstackProvider>
                   {children}
@@ -39,6 +39,7 @@ export default function RootLayout({
                   <ModalProvider />
                 </TanstackProvider>
               </EdgeStoreProvider>
+            </SocketProvider>
           </AuthContext>
           <ToasterContext />
         </ThemeProvider>

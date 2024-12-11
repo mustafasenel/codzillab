@@ -1,11 +1,11 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest } from "next";
 import prismadb from "@/lib/prismadb";
 import getCurrentUserPages from "@/actions/getCurrentUserPages";
-import { pusherServer } from "@/lib/pusher";
+import { NextApiResponeServerIo } from "@/types";
 
 export default async function handler(
     req: NextApiRequest,
-    res:NextApiResponse 
+    res:NextApiResponeServerIo
 ) {
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed"});
@@ -80,15 +80,10 @@ export default async function handler(
             }
         });
 
-<<<<<<< HEAD
-        const channelKey = `chat_${channelId}_messages`;
-=======
->>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
 
-        const addKey = `chat:${channelId}:messages`;
-        const channelKey = `chat_${channelId}`;
+        const addKey = `chat_${channelId}_messages`;
 
-        pusherServer.trigger(channelKey, addKey, message);
+        res?.socket?.server?.io?.emit(addKey, message);
 
         return res.status(200).json(message);
     } catch (error) {

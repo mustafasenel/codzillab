@@ -1,9 +1,9 @@
 "use client"
 
-import { usePusherConnectionStatus } from "@/hooks/use-pusher-status";
+import { useSocket } from "@/context/socket-provider";
 
 const SocketIndicator = () => {
-  const isConnected = usePusherConnectionStatus();
+  const isConnected = useSocket();
     if (!isConnected) {
 
         return (
