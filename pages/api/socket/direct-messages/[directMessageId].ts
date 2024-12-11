@@ -3,6 +3,10 @@ import { NextApiRequest } from "next";
 import prismadb from "@/lib/prismadb";
 import { MemnerRole } from "@prisma/client";
 import { NextApiResponeServerIo } from "@/types";
+<<<<<<< HEAD
+=======
+import { pusherServer } from "@/lib/pusher";
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
 
 export default async function handler(req: NextApiRequest, res: NextApiResponeServerIo) {
     if (req.method !== "DELETE" && req.method !== "PATCH") {
@@ -138,9 +142,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponeSe
             });
         }
 
+<<<<<<< HEAD
         const updateKey = `chat_${conversation.id}_messages_update`;
 
         res?.socket?.server?.io?.emit(updateKey, directMessage);
+=======
+        const updateKey = `chat:${conversation.id}:messages:update`;
+
+        const channelKey = `chat_${conversation.id}`;
+
+        pusherServer.trigger(channelKey, updateKey, directMessage);
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
 
         return res.status(200).json(directMessage);
     } catch (error) {

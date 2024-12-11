@@ -4,11 +4,19 @@ import { Member, Message, User } from "@prisma/client";
 import ChatWelcome from "./ChatWelcome";
 import { useChatQuery } from "@/hooks/use-chat-query";
 import { Loader2, ServerCrash } from "lucide-react";
+<<<<<<< HEAD
 import { ElementRef, Fragment, useRef } from "react";
+=======
+import { ElementRef, Fragment, useEffect, useRef } from "react";
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
 import ChatItem from "./ChatItem";
 import { format } from "date-fns";
 import { useChatSocket } from "@/hooks/use-chat-socket";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
 
 const DATE_FORMAT = "d MMM yyyy, HH:mm";
 
@@ -40,12 +48,21 @@ const ChatMessages = ({
   type,
 }: ChatMessagesProps) => {
   const queryKey = `chat:${chatId}`;
+<<<<<<< HEAD
   const addKey = `chat_${chatId}_messages`;
   const updateKey = `chat_${chatId}_messages_update`;
+=======
+  const addKey = `chat:${chatId}:messages`;
+  const updateKey = `chat:${chatId}:messages:update`;
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
 
   const chatRef = useRef<ElementRef<"div">>(null);
   const bottomRef = useRef<ElementRef<"div">>(null);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useChatQuery({
       apiUrl,
@@ -63,6 +80,17 @@ const ChatMessages = ({
     count: data?.pages?.[0].items?.length ?? 0
 })
 
+<<<<<<< HEAD
+=======
+  useChatScroll({
+    chatRef, 
+    bottomRef, 
+    loadMore: fetchNextPage, 
+    shouldLoadMore: !isFetchingNextPage && !!hasNextPage, 
+    count: data?.pages?.[0].items?.length ?? 0
+})
+
+>>>>>>> 9051b5ddd4cddb77d269a93c36a6e3472dd664fb
   if (status === "pending") {
     return (
       <div className="flex flex-col flex-1 justify-center items-center">

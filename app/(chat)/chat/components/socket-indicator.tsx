@@ -1,25 +1,19 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-import { useSocket } from "@/context/socket-provider"
-
-
+import { usePusherConnectionStatus } from "@/hooks/use-pusher-status";
 
 const SocketIndicator = () => {
-    const { isConnected } = useSocket()
+  const isConnected = usePusherConnectionStatus();
     if (!isConnected) {
 
         return (
-          <Badge variant="outline" className="bg-yellow-600 text-white border-none">
-            Fallback: Polling every is
-          </Badge>
+          <div className="bg-yellow-600 text-white border-none rounded-full w-4 h-4"/>
+
         )
     }
 
     return (
-        <Badge variant="outline" className="bg-emerald-600 text-white border-none">
-          Live: Real-time update
-        </Badge>
+        <div className="bg-emerald-600 text-white border-none rounded-full w-4 h-4" />
       )
 }
 
